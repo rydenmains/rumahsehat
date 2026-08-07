@@ -56,7 +56,6 @@
     <a class="btn" id="dlUser" href="RumahSehat-User.apk" download>
       <span class="ic">⬇</span> Unduh Rumah Sehat
     </a>
-    <a class="btn" id="dlAdmin" href="RumahSehat-Admin.apk" download style="display:none"></a>
     <p class="note">Android 6.0+ • file ±7 MB</p>
   </div>
 
@@ -76,14 +75,5 @@
 
   <footer><b>Rumah Sehat</b> • aplikasi penilaian kesehatan lingkungan</footer>
 </div>
-
-<script>
-// Kunci download supaya admin tidak tampil di halaman publik.
-const ADMIN_KEY = "RumahSehat-Admin.apk";
-const param = new URLSearchParams(location.search).get("apk");
-if (param === ADMIN_KEY) {
-  document.getElementById("dlAdmin").style.display = "flex";
-}
-</script>
 </body>
 </html>
