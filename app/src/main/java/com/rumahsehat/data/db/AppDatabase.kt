@@ -10,7 +10,7 @@ import com.rumahsehat.data.dao.AssessmentDao
 import com.rumahsehat.data.model.Assessment
 import com.rumahsehat.data.model.ScoreItem
 
-@Database(entities = [Assessment::class, ScoreItem::class], version = 2, exportSchema = false)
+@Database(entities = [Assessment::class, ScoreItem::class], version = 2, exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun assessmentDao(): AssessmentDao
 
