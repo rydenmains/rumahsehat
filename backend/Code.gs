@@ -215,7 +215,7 @@ function setupEnvironment() {
       "16. Tinja Bayi", "17. Buang Sampah",
 
       // Ringkasan
-      "Total Skor", "Status Health", "Catatan Field", "URL Foto 1", "URL Foto 2", "URL Foto 3"
+      "Total Skor", "Status Health", "Catatan Field", "URL Foto Komponen Rumah", "URL Foto Sarana Sanitasi", "URL Foto Perilaku Penghuni"
     ];
 
     if (sheet.getLastRow() > 0) sheet.clear();
