@@ -104,4 +104,4 @@ MIT - bebas pakai, ubah, dan sebarkan.
 
 ---
 
-*RumahSehat - Projek Kemitraan Kesehatan Lingkungan 2026*
+*RumahSehat - Rayz*
