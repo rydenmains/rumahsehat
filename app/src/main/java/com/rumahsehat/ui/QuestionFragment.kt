@@ -25,7 +25,7 @@ class QuestionFragment : Fragment() {
     private lateinit var item: FormItem
     private var photoFile: File? = null
     private var photoCaption: Int = R.string.btn_take_photo
-    private var sectionKey: String = "1"
+    private var sectionKey: String = AssessmentViewModel.photoKeys[0]
 
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && photoFile != null) {
@@ -61,7 +61,7 @@ class QuestionFragment : Fragment() {
                 "2" -> R.string.photo_sanitation
                 else -> R.string.photo_kitchen_spal
             }
-            sectionKey = item.id.substringBefore('.')
+            sectionKey = AssessmentViewModel.photoKeyFor(item.id)
             btnPhoto.setText(photoCaption)
 
             sliderScore.valueFrom = 0f

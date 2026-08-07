@@ -76,7 +76,7 @@ function doPost(e) {
     var photoLengths = 0;              // jumlah slot foto terkirim
 
     var photos = payload.photos || {};
-    var sectionKeys = ["1", "2", "3"];
+    var sectionKeys = ["house_front", "sanitation", "kitchen_spal"];
 
     if (photos && Object.keys(photos).length > 0) {
       var folder = getOrCreateFolder();
