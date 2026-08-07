@@ -28,8 +28,8 @@ class QuestionFragment : Fragment() {
     private var sectionKey: String = "1"
 
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success) {
-            viewModel.markPhotoTaken(sectionKey)
+        if (success && photoFile != null) {
+            viewModel.markPhotoTaken(sectionKey, photoFile!!.absolutePath)
             Toast.makeText(requireContext(), photoCaption, Toast.LENGTH_SHORT).show()
         }
     }

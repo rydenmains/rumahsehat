@@ -23,7 +23,7 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
     private val _formItems = FormItemsProvider.getFormItems()
     val formItems: List<FormItem> get() = _formItems
     private val weights = _formItems.associate { it.id to it.maxScore }
-    private val takenPhotos = mutableSetOf<String>()
+    private val photoPaths = mutableMapOf<String, String>()
 
     init {
         val dao = AppDatabase.getDatabase(application).assessmentDao()
@@ -40,13 +40,13 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
     fun missingItems(): List<FormItem> =
         _formItems.filter { it.isApplicable && it.currentScore <= 0 }
 
-    fun markPhotoTaken(section: String) {
-        takenPhotos.add(section)
+    fun markPhotoTaken(section: String, path: String) {
+        photoPaths[section] = path
     }
 
-    fun isPhotoTaken(section: String): Boolean = takenPhotos.contains(section)
+    fun isPhotoTaken(section: String): Boolean = photoPaths.containsKey(section)
 
-    fun missingPhotos(): List<String> = photoSections.filter { it !in takenPhotos }
+    fun missingPhotos(): List<String> = photoSections.filter { it !in photoPaths }
 
     companion object {
         // Kunci nama foto: prefix bagian (1 = Rumah, 2 = Sanitasi, 3 = Perilaku)
@@ -73,6 +73,7 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
 
             val calcResult = AssessmentCalculator.calculate(scoreItems, weights)
             val assessmentId = "ASM-${System.currentTimeMillis()}"
+            val photoPathsSnapshot = photoPaths.toMap()
 
             val assessment = Assessment(
                 id = assessmentId,
@@ -83,7 +84,8 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
                 totalApplicable = calcResult.totalApplicable,
                 percentage = calcResult.percentage,
                 isHealthy = calcResult.isHealthy,
-                syncStatus = "PENDING"
+                syncStatus = "PENDING",
+                photoPathsJson = photoPathsSnapshot.entries.joinToString(";") { "${it.key}=${it.value}" }
             )
 
             // Simpan harus selesai walau layar ditutup segera setelah tombol Simpan.
