@@ -47,11 +47,6 @@
             android:exported="false"
             android:label="@string/review_title" />
 
-        <activity
-            android:name=".ui.AdminDashboardActivity"
-            android:exported="false"
-            android:label="@string/admin_dashboard" />
-
     </application>
 
 </manifest>

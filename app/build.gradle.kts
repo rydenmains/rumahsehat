@@ -35,17 +35,10 @@ android {
             applicationIdSuffix = ".user"
             versionNameSuffix = "-user"
         }
-        create("admin") {
-            dimension = "role"
-            applicationIdSuffix = ".admin"
-            versionNameSuffix = "-admin"
-        }
     }
 
     applicationVariants.all {
-        val flavor = this.flavorName
-        val label = if (flavor == "admin") "Rumah Sehat Admin" else "Rumah Sehat"
-        resValue("string", "app_name", label)
+        resValue("string", "app_name", "Rumah Sehat")
     }
 
     buildFeatures {
