@@ -46,11 +46,18 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
 
     fun isPhotoTaken(section: String): Boolean = photoPaths.containsKey(section)
 
-    fun missingPhotos(): List<String> = photoSections.filter { it !in photoPaths }
+    fun missingPhotos(): List<String> = photoKeys.filter { it !in photoPaths }
 
     companion object {
-        // Kunci nama foto: prefix bagian (1 = Rumah, 2 = Sanitasi, 3 = Perilaku)
-        private val photoSections = listOf("1", "2", "3")
+        // Nama bagian foto: Rumah, Sanitasi, Perilaku (dapur/SPAL)
+        val photoKeys = listOf("house_front", "sanitation", "kitchen_spal")
+
+        /** Konversi id item (1.1, 2.3, ...) ke kunci bagian foto. */
+        fun photoKeyFor(itemId: String): String = when (itemId.substringBefore('.')) {
+            "1" -> photoKeys[0]
+            "2" -> photoKeys[1]
+            else -> photoKeys[2]
+        }
     }
 
     fun loadReview(id: String) {

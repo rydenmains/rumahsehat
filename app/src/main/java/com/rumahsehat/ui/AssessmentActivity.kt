@@ -69,13 +69,7 @@ class AssessmentActivity : AppCompatActivity() {
 
         val missingPhotos = viewModel.missingPhotos()
         if (missingPhotos.isNotEmpty()) {
-            val names = missingPhotos.map {
-                when (it) {
-                    "1" -> getString(R.string.photo_house_front)
-                    "2" -> getString(R.string.photo_sanitation)
-                    else -> getString(R.string.photo_kitchen_spal)
-                }
-            }
+            val names = missingPhotos.map { getString(it.toPhotoNameRes()) }
             issues.add(
                 getString(R.string.msg_missing_section_photos) + ":\n- " + names.joinToString("\n- ")
             )
@@ -89,6 +83,12 @@ class AssessmentActivity : AppCompatActivity() {
         viewModel.saveAssessment(assessor, company)
         Toast.makeText(this, R.string.msg_saved, Toast.LENGTH_SHORT).show()
         finish()
+    }
+
+    private fun String.toPhotoNameRes(): Int = when (this) {
+        AssessmentViewModel.photoKeys[0] -> R.string.photo_house_front
+        AssessmentViewModel.photoKeys[1] -> R.string.photo_sanitation
+        else -> R.string.photo_kitchen_spal
     }
 
     private fun showCustomWarning(message: String) {
