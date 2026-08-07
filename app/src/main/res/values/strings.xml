@@ -78,18 +78,4 @@
     <string name="review_items_title">Hasil Per Item</string>
     <string name="item_not_applicable">Tidak Berlaku</string>
 
-    <!-- Admin -->
-    <string name="admin_dashboard">Dashboard Admin</string>
-    <string name="admin_stats_title">Ringkasan</string>
-    <string name="admin_total">Total</string>
-    <string name="admin_healthy">Sehat</string>
-    <string name="admin_unhealthy">Tidak Sehat</string>
-    <string name="admin_list_title">Semua Penilaian</string>
-
-    <!-- Cloud sync admin -->
-    <string name="btn_cloud_load">Muat Data dari Cloud</string>
-    <string name="btn_cloud_refresh">Perbarui dari Cloud</string>
-    <string name="cloud_loaded">Cloud dimuat: %1$d penilaian</string>
-    <string name="cloud_failed">Gagal mengambil data cloud. Cek internet &amp; server Apps Script.</string>
-    <string name="cloud_empty">Belum ada data di cloud (Google Sheet).</string>
 </resources>
