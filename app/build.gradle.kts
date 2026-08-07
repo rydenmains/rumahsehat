@@ -21,10 +21,20 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../rumahsehat-upload.keystore")
+            storePassword = System.getenv("RS_KEYSTORE_PASSWORD") ?: "rumahsehat2026"
+            keyAlias = "rumahsehat"
+            keyPassword = "rumahsehat2026"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
