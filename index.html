@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Rumah Sehat · Unduh Aplikasi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --green:#0F6A4B; --green2:#1E8E5A; --dark:#123A2C; --ink:#1A1A1A;
+    --card:#FFFFFF; --bg:#F7F5EF; --line:#E6E0D4; --muted:#5C5C5C;
+    --radius:20px; --shadow:0 10px 32px rgba(15,106,75,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:480px;margin:0 auto;padding:20px 16px 40px}
+  .hero{background:linear-gradient(135deg,var(--dark),var(--green));border-radius:var(--radius);color:#fff;padding:26px 22px;text-align:center;box-shadow:var(--shadow)}
+  .hero .logo{width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-weight:900;font-size:24px;margin:0 auto 12px;backdrop-filter:blur(4px)}
+  .hero h1{margin:0 0 6px;font-size:24px;font-weight:900}
+  .hero p{margin:0;font-size:14px;opacity:.9}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-top:16px}
+  .card h2{margin:0 0 4px;font-size:17px;font-weight:800}
+  .card p{margin:0 0 16px;font-size:13.5px;color:var(--muted)}
+  .btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border:0;border-radius:14px;font-family:inherit;font-size:16px;font-weight:800;color:#fff;background:var(--green2);cursor:pointer;text-decoration:none;box-shadow:0 6px 18px rgba(30,142,90,.35)}
+  .btn .ic{font-size:20px}
+  .btn.sub{background:#fff;color:var(--green);border:1.5px solid var(--green2);box-shadow:none;margin-top:12px}
+  .note{font-size:12px;color:var(--muted);text-align:center;margin-top:12px}
+  .steps{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+  .step{display:flex;gap:12px;align-items:flex-start}
+  .step .num{flex:0 0 26px;height:26px;border-radius:50%;background:rgba(15,106,75,.12);color:var(--green);font-weight:900;font-size:13px;display:grid;place-items:center}
+  .step b{display:block;font-size:14px}
+  .step span{font-size:12.5px;color:var(--muted)}
+  .divider{height:1px;background:var(--line);margin:18px 0}
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .role{border:1.5px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+  .role b{display:block;font-size:14px;margin-bottom:8px}
+  .role a{display:inline-block;width:100%;padding:10px;border-radius:10px;text-decoration:none;font-size:13px;font-weight:800}
+  .role a.user{background:var(--green2);color:#fff}
+  .role a.admin{background:#2D3CEF;color:#fff}
+  footer{margin:22px 0 0;text-align:center;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="logo">RS</div>
+    <h1>Rumah Sehat</h1>
+    <p>Penilaian kesehatan lingkungan rumah • Langsung ke Google Sheet</p>
+  </div>
+
+  <div class="card">
+    <h2>Petugas Lapangan</h2>
+    <p>Versi untuk mengisi penilaian & foto rumah.</p>
+    <a class="btn" id="dlUser" href="RumahSehat-User.apk" download>
+      <span class="ic">⬇</span> Unduh Rumah Sehat
+    </a>
+    <a class="btn" id="dlAdmin" href="RumahSehat-Admin.apk" download style="display:none"></a>
+    <p class="note">Android 6.0+ • file ±7 MB</p>
+  </div>
+
+  <div class="card">
+    <h2>Cara Pasang</h2>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><div><b>Unduh file APK</b><span>tek tombol unduh di atas.</span></div></div>
+      <div class="step"><div class="num">2</div><div><b>Izinkan instalasi</b><span>muncul peringatan "install dari sumber tidak dikenal" → ketuk IZINKAN / INSTALL.</span></div></div>
+      <div class="step"><div class="num">3</div><div><b>Buka & mulai menilai</b><span>isi nama, jawab indikator, ambil 3 foto, simpan.</span></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Butuh bantuan?</h2>
+    <p>Hubungi pengelola kesehatan lingkungan di wilayah Anda.</p>
+  </div>
+
+  <footer><b>Rumah Sehat</b> • aplikasi penilaian kesehatan lingkungan</footer>
+</div>
+
+<script>
+// Kunci download supaya admin tidak tampil di halaman publik.
+const ADMIN_KEY = "RumahSehat-Admin.apk";
+const param = new URLSearchParams(location.search).get("apk");
+if (param === ADMIN_KEY) {
+  document.getElementById("dlAdmin").style.display = "flex";
+}
+</script>
+</body>
+</html>
