@@ -1,0 +1,95 @@
+<resources>
+    <string name="app_name">Rumah Sehat</string>
+    <string name="save_assessment">Simpan &amp; Kirim</string>
+    <string name="new_assessment">Penilaian Baru</string>
+    <string name="applicable">Tidak Berlaku</string>
+    <string name="score">Skor</string>
+    <string name="status_healthy">SEHAT</string>
+    <string name="status_unhealthy">TIDAK SEHAT</string>
+    <string name="status_pending">Menunggu Kirim</string>
+    <string name="status_synced">Terkirim</string>
+    <string name="msg_saved">Penilaian Berhasil Disimpan</string>
+    <string name="msg_fill_identity">Nama petugas dan perusahaan wajib diisi.</string>
+    <string name="msg_internet_required">Mohon nyalakan internet untuk mengirim data ke server</string>
+    <string name="msg_missing_answer">Masih ada item yang belum dinilai. Silakan lengkapi dulu.</string>
+    <string name="msg_missing_title">Penilaian Belum Lengkap</string>
+    <string name="msg_missing_section_identity">Data Petugas</string>
+    <string name="msg_missing_section_items">Item Belum Dinilai</string>
+    <string name="msg_missing_section_photos">Foto Belum Diambil</string>
+    <string name="ok">Oke</string>
+
+    <!-- Beranda -->
+    <string name="greeting_hello">Halo,</string>
+    <string name="greeting_assessor">Petugas</string>
+    <string name="greeting_subtitle">Pilih mulai untuk menilai kondisi rumah warga.</string>
+    <string name="start_assessment">Mulai Penilaian</string>
+    <string name="assessor_name_label">Nama Petugas</string>
+    <string name="company_label">Nama Perusahaan / Puskesmas</string>
+    <string name="history_title">Penilaian Tersimpan</string>
+    <string name="history_empty">Belum ada penilaian.</string>
+    <string name="pending_info">%1$d penilaian menunggu dikirim. Akan dikirim otomatis saat ada internet.</string>
+    <string name="level_hint">Kira-kira seberapa lengkap kondisi item ini?</string>
+    <string name="level_poor">Kurang</string>
+    <string name="level_fair">Cukup</string>
+    <string name="level_good">Baik</string>
+    <string name="level_excellent">Sangat Baik</string>
+    <string name="level_none">Belum dinilai</string>
+    <string name="notes_hint">Catatan (opsional)</string>
+    <string name="question_count">PERTANYAAN %1$d DARI %2$d</string>
+    <string name="back">Kembali</string>
+    <string name="next">Lanjut</string>
+
+    <!-- Form Categories -->
+    <string name="cat_housing">I. Komponen Rumah</string>
+    <string name="cat_sanitation">II. Sarana Sanitasi</string>
+    <string name="cat_behavior">III. Perilaku Penghuni</string>
+
+    <!-- I. Housing Components -->
+    <string name="item_ceiling">Langit-langit</string>
+    <string name="item_walls">Dinding</string>
+    <string name="item_floor">Lantai</string>
+    <string name="item_bedroom_windows">Jendela Kamar Tidur</string>
+    <string name="item_living_windows">Jendela Ruang Keluarga</string>
+    <string name="item_ventilation">Ventilasi</string>
+    <string name="item_kitchen_smoke">Lubang Asap Dapur</string>
+    <string name="item_lighting">Pencahayaan</string>
+
+    <!-- II. Sanitation Facilities -->
+    <string name="item_clean_water">Sarana Air Bersih</string>
+    <string name="item_latrine">Jamban (Toilet)</string>
+    <string name="item_spal">Sistem Pembuangan Air Limbah (SPAL)</string>
+    <string name="item_garbage">Sarana Pembuangan Sampah</string>
+
+    <!-- III. Occupant Behavior -->
+    <string name="item_behavior_bedroom_win">Membuka Jendela Kamar</string>
+    <string name="item_behavior_living_win">Membuka Jendela Ruang Keluarga</string>
+    <string name="item_behavior_cleaning">Membersihkan Rumah &amp; Halaman</string>
+    <string name="item_behavior_feces">Membuang Tinja Bayi/Balita ke Jamban</string>
+    <string name="item_behavior_trash">Membuang Sampah pada Tempatnya</string>
+
+    <!-- Photos -->
+    <string name="photo_house_front">Foto 1: Tampak Depan Rumah</string>
+    <string name="photo_sanitation">Foto 2: Sarana Sanitasi (Jamban/Air)</string>
+    <string name="photo_kitchen_spal">Foto 3: Area Dapur / SPAL / Sampah</string>
+    <string name="btn_take_photo">Ambil Foto</string>
+
+    <!-- Tinjauan (Review) -->
+    <string name="review_title">Tinjauan Penilaian</string>
+    <string name="review_items_title">Hasil Per Item</string>
+    <string name="item_not_applicable">Tidak Berlaku</string>
+
+    <!-- Admin -->
+    <string name="admin_dashboard">Dashboard Admin</string>
+    <string name="admin_stats_title">Ringkasan</string>
+    <string name="admin_total">Total</string>
+    <string name="admin_healthy">Sehat</string>
+    <string name="admin_unhealthy">Tidak Sehat</string>
+    <string name="admin_list_title">Semua Penilaian</string>
+
+    <!-- Cloud sync admin -->
+    <string name="btn_cloud_load">Muat Data dari Cloud</string>
+    <string name="btn_cloud_refresh">Perbarui dari Cloud</string>
+    <string name="cloud_loaded">Cloud dimuat: %1$d penilaian</string>
+    <string name="cloud_failed">Gagal mengambil data cloud. Cek internet &amp; server Apps Script.</string>
+    <string name="cloud_empty">Belum ada data di cloud (Google Sheet).</string>
+</resources>

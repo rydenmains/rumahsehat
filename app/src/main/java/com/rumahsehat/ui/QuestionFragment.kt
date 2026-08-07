@@ -25,9 +25,11 @@ class QuestionFragment : Fragment() {
     private lateinit var item: FormItem
     private var photoFile: File? = null
     private var photoCaption: Int = R.string.btn_take_photo
+    private var sectionKey: String = "1"
 
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
+            viewModel.markPhotoTaken(sectionKey)
             Toast.makeText(requireContext(), photoCaption, Toast.LENGTH_SHORT).show()
         }
     }
@@ -59,6 +61,7 @@ class QuestionFragment : Fragment() {
                 "2" -> R.string.photo_sanitation
                 else -> R.string.photo_kitchen_spal
             }
+            sectionKey = item.id.substringBefore('.')
             btnPhoto.setText(photoCaption)
 
             sliderScore.valueFrom = 0f
