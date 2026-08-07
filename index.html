@@ -4,6 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Rumah Sehat · Unduh Aplikasi</title>
+<link rel="icon" type="image/png" href="logo.png" />
+<link rel="apple-touch-icon" href="logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet" />
@@ -17,7 +19,8 @@
   body{margin:0;font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
   .wrap{max-width:480px;margin:0 auto;padding:20px 16px 40px}
   .hero{background:linear-gradient(135deg,var(--dark),var(--green));border-radius:var(--radius);color:#fff;padding:26px 22px;text-align:center;box-shadow:var(--shadow)}
-  .hero .logo{width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-weight:900;font-size:24px;margin:0 auto 12px;backdrop-filter:blur(4px)}
+  .hero .logo{width:56px;height:56px;border-radius:16px;margin:0 auto 12px;overflow:hidden;box-shadow:var(--shadow)}
+  .hero .logo img{width:100%;height:100%;object-fit:cover;display:block}
   .hero h1{margin:0 0 6px;font-size:24px;font-weight:900}
   .hero p{margin:0;font-size:14px;opacity:.9}
   .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-top:16px}
@@ -45,7 +48,7 @@
 <body>
 <div class="wrap">
   <div class="hero">
-    <div class="logo">RS</div>
+    <div class="logo"><img src="logo.png" alt="Rumah Sehat" /></div>
     <h1>Rumah Sehat</h1>
     <p>Penilaian kesehatan lingkungan rumah • Langsung ke Google Sheet</p>
   </div>
