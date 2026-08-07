@@ -10,12 +10,21 @@ Alat bantu petugas lapangan untuk mengaudit rumah sehat sesuai indikator kompone
 
 ## Ringkasan
 
-Petugas menilai rumah via aplikasi, dan hasilnya langsung terkirim ke spreadsheet. Ada **dua versi APK** untuk dua peran berbeda.
+Petugas menilai rumah via aplikasi, dan data langsung terkirim ke spreadsheet.
 
 | Versi | Label | Untuk |
 |---|---|---|
-| **Rumah Sehat** (User) | `RumahSehat-User.apk` | Petugas lapangan: mengisi penilaian + foto |
-| **Rumah Sehat Admin** | `RumahSehat-Admin.apk` | Pengelola: melihat rekap data perangkat & cloud |
+| **Rumah Sehat** | `RumahSehat-User.apk` | Petugas lapangan: input penilaian + foto |
+
+---
+
+## Rilis
+
+Unduh APK terbaru di **Release** GitHub, atau langsung dari `RumahSehat-User.apk` di root repo.
+
+| Versi | Tanggal | Catatan |
+|---|---|---|
+| **v1.0.0** | 2026-08-08 | Rilis pertama: 17 indikator, 3 foto/penilaian, sinkron Google Sheets |
 
 ---
 
@@ -24,8 +33,7 @@ Petugas menilai rumah via aplikasi, dan hasilnya langsung terkirim ke spreadshee
 - **17 indikator** penilaian rumah sehat (komponen rumah, sanitasi, perilaku)
 - **3 foto** per penilaian, terkirim ke Google Drive + tampil di Sheet
 - **Offline-first**: penilaian disimpan lokal, disinkron otomatis saat online
-- **Dua peran** (user / admin) dengan launcher & identitas aplikasi terpisah
-- **Rekap otomatis** di dashboard admin dari Google Sheet
+- **Rekap otomatis** di dashboard web dari Google Sheet
 
 ---
 
@@ -50,10 +58,9 @@ Penilaian memakai bobot per bagian (komponen rumah 20 poin, sarana sanitasi 100-
 
 ## Screenshots
 
-*Menunggu tangkapan layar — akan ditaruh di folder ini.* Masukkan `art/screen-form.png` dan `art/screen-admin.png` lalu update markup di bawah.
+*Menunggu tangkapan layar — akan ditaruh di folder ini.* Masukkan `art/screen-form.png` lalu update markup di bawah.
 
 ![Form](art/screen-form.png)
-![Admin](art/screen-admin.png)
 
 ---
 
@@ -72,10 +79,8 @@ RumahSehat/
 │   └── proguard-rules.pro    # R8 keep rules (obfuscation release)
 ├── backend/
 │   ├── Code.gs          # Apps Script: terima data → Drive + Google Sheets
-│   ├── dashboard.html   # Dashboard web (laptop) baca dari sheet
 │   └── user.html        # Halaman "penilaian saya" per petugas
 ├── RumahSehat-User.apk  # Build user (release/debug)
-└── RumahSehat-Admin.apk # Build admin
 ```
 
 ---
@@ -83,10 +88,10 @@ RumahSehat/
 ## Build dari Sumber
 
 ```
-# Debug (dua flavor)
-./gradlew assembleUserDebug assembleAdminDebug
+# Debug
+./gradlew assembleUserDebug
 # Release (R8 obfuscation aktif)
-./gradlew assembleUserRelease assembleAdminRelease
+./gradlew assembleUserRelease
 ```
 
 Hasil release ada di `app/build/outputs/apk/<flavor>/release/`.
