@@ -62,7 +62,10 @@ class QuestionFragment : Fragment() {
                 else -> R.string.photo_kitchen_spal
             }
             sectionKey = AssessmentViewModel.photoKeyFor(item.id)
+            // Foto hanya 3, diambil sekali per bagian => tampilkan tombol hanya di item pertama (1.1/2.1/3.1).
+            val isSectionFirst = item.id.endsWith(".1")
             btnPhoto.setText(photoCaption)
+            btnPhoto.visibility = if (isSectionFirst) View.VISIBLE else View.GONE
 
             sliderScore.valueFrom = 0f
             sliderScore.valueTo = 4f
