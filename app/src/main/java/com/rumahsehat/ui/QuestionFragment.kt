@@ -6,6 +6,8 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
@@ -30,6 +32,7 @@ class QuestionFragment : Fragment() {
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && photoFile != null) {
             viewModel.markPhotoTaken(sectionKey, photoFile!!.absolutePath)
+            updatePhotoUI()
             Toast.makeText(requireContext(), photoCaption, Toast.LENGTH_SHORT).show()
         }
     }
@@ -49,6 +52,7 @@ class QuestionFragment : Fragment() {
         item = viewModel.getFormItemAt(questionIndex)
 
         binding.apply {
+            badgeNumber.text = item.id.substringBefore('.')
             tvQuestionNumber.text = getString(
                 R.string.question_count,
                 questionIndex + 1,
@@ -64,24 +68,20 @@ class QuestionFragment : Fragment() {
             sectionKey = AssessmentViewModel.photoKeyFor(item.id)
             // Foto hanya 3, diambil sekali per bagian => tampilkan tombol hanya di item pertama (1.1/2.1/3.1).
             val isSectionFirst = item.id.endsWith(".1")
-            btnPhoto.setText(photoCaption)
+            tvPhotoCaption.visibility = if (isSectionFirst) View.VISIBLE else View.GONE
+            tvPhotoCaption.setText(photoCaption)
+            btnPhoto.setText(R.string.btn_take_photo)
             btnPhoto.visibility = if (isSectionFirst) View.VISIBLE else View.GONE
 
-            sliderScore.valueFrom = 0f
-            sliderScore.valueTo = 4f
-            sliderScore.stepSize = 1f
+            buildOptions()
 
-            sliderScore.addOnChangeListener { _, value, fromUser ->
-                if (fromUser) {
-                    item.currentScore = scoreForLevel(value, item.maxScore)
-                    updateLevelLabel()
-                }
+            rgOptions.setOnCheckedChangeListener { _, checkedId ->
+                item.selectedOptionIndex = item.options.indexOfFirst { it.letter.code == checkedId }
             }
 
             cbApplicable.setOnCheckedChangeListener { _, isChecked ->
                 item.isApplicable = isChecked
-                sliderScore.isEnabled = isChecked
-                etNotes.isEnabled = isChecked
+                setApplicableUI(isChecked)
             }
 
             etNotes.setText(item.reason.orEmpty())
@@ -96,41 +96,69 @@ class QuestionFragment : Fragment() {
             btnPhoto.setOnClickListener { capturePhoto() }
 
             updateUI()
+            updatePhotoUI()
         }
     }
 
-    private fun scoreForLevel(level: Float, max: Int): Int = when (level) {
-        1f -> (max * 0.25).toInt()
-        2f -> (max * 0.50).toInt()
-        3f -> (max * 0.75).toInt()
-        4f -> max
-        else -> 0
-    }
-
-    private fun updateLevelLabel() {
-        binding.tvLevel.setText(
-            if (item.isApplicable) AssessmentLevel.labelRes(item.currentScore, item.maxScore)
-            else R.string.item_not_applicable
-        )
+    private fun buildOptions() {
+        binding.rgOptions.removeAllViews()
+        item.options.forEach { option ->
+            val rb = RadioButton(requireContext())
+            rb.id = option.letter.code
+            rb.text = option.label
+            rb.textSize = 15f
+            rb.setTextColor(requireContext().getColor(R.color.on_surface))
+            rb.setBackgroundResource(R.drawable.bg_radio_card)
+            rb.setPaddingRelative(dp(14), dp(14), dp(14), dp(14))
+            val buttonTint = android.content.res.ColorStateList(
+                arrayOf(
+                    intArrayOf(android.R.attr.state_checked),
+                    intArrayOf()
+                ),
+                intArrayOf(
+                    requireContext().getColor(R.color.forest_green),
+                    requireContext().getColor(R.color.outline)
+                )
+            )
+            rb.setButtonTintList(buttonTint)
+            val lp = RadioGroup.LayoutParams(
+                RadioGroup.LayoutParams.MATCH_PARENT,
+                RadioGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.bottomMargin = dp(10)
+            rb.layoutParams = lp
+            binding.rgOptions.addView(rb)
+        }
     }
 
     private fun updateUI() {
         binding.apply {
             cbApplicable.isChecked = item.isApplicable
-            sliderScore.isEnabled = item.isApplicable
-            etNotes.isEnabled = item.isApplicable
+            setApplicableUI(item.isApplicable)
 
-            sliderScore.value = when (item.currentScore) {
-                0 -> 0f
-                (item.maxScore * 0.25).toInt() -> 1f
-                (item.maxScore * 0.50).toInt() -> 2f
-                (item.maxScore * 0.75).toInt() -> 3f
-                item.maxScore -> 4f
-                else -> 0f
+            if (item.selectedOptionIndex >= 0) {
+                rgOptions.check(item.options[item.selectedOptionIndex].letter.code)
+            } else {
+                rgOptions.clearCheck()
             }
-            updateLevelLabel()
         }
     }
+
+    private fun setApplicableUI(applicable: Boolean) {
+        binding.rgOptions.isEnabled = applicable
+        binding.etNotes.isEnabled = applicable
+    }
+
+    private fun updatePhotoUI() {
+        val taken = viewModel.isPhotoTaken(sectionKey)
+        binding.btnPhoto.setText(if (taken) R.string.btn_retake_photo else R.string.btn_take_photo)
+        binding.tvPhotoHint.visibility =
+            if (binding.btnPhoto.visibility == View.VISIBLE) View.VISIBLE else View.GONE
+        binding.tvPhotoHint.setText(if (taken) R.string.photo_hint_taken else R.string.photo_hint_missing)
+    }
+
+    private fun dp(value: Int): Int =
+        (value * resources.displayMetrics.density).toInt()
 
     private fun capturePhoto() {
         val fileName = "IMG_${item.id}_${System.currentTimeMillis()}.jpg"

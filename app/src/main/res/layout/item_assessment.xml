@@ -39,9 +39,8 @@
                 android:id="@+id/tvStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="10dp"
+                android:paddingHorizontal="12dp"
                 android:paddingVertical="4dp"
-                android:textColor="@android:color/white"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
@@ -49,6 +48,14 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_weight="1" />
+
+            <View
+                android:id="@+id/dotSync"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_status_dot" />
 
             <TextView
                 android:id="@+id/tvSync"

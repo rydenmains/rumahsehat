@@ -3,9 +3,13 @@ package com.rumahsehat.ui
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.viewpager2.widget.ViewPager2
 import com.rumahsehat.R
 import com.rumahsehat.databinding.ActivityAssessmentBinding
@@ -45,6 +49,26 @@ class AssessmentActivity : AppCompatActivity() {
         }
 
         binding.btnSave.setOnClickListener { onSave() }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val bottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+            binding.bottomNavigation.updatePadding(bottom = bottom)
+            insets
+        }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                AlertDialog.Builder(this@AssessmentActivity, R.style.AlertDialogCustom)
+                    .setTitle(R.string.exit_confirm_title)
+                    .setMessage(R.string.exit_confirm_message)
+                    .setPositiveButton(getString(R.string.exit_confirm_leave)) { _, _ ->
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                    }
+                    .setNegativeButton(getString(R.string.exit_confirm_stay), null)
+                    .show()
+            }
+        })
     }
 
     private fun onSave() {

@@ -6,7 +6,6 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.rumahsehat.BuildConfig
 import com.rumahsehat.R
 import com.rumahsehat.data.model.FormItemsProvider
 import com.rumahsehat.databinding.ActivityReviewBinding
@@ -29,10 +28,7 @@ class ReviewActivity : AppCompatActivity() {
         }
 
         val items = FormItemsProvider.getFormItems()
-        val adapter = ReviewAdapter(
-            titles = items.associate { it.id to it.titleRes },
-            weights = items.associate { it.id to it.maxScore }
-        )
+        val adapter = ReviewAdapter(items.associate { it.id to it })
         binding.rvItems.layoutManager = LinearLayoutManager(this)
         binding.rvItems.adapter = adapter
 
@@ -51,12 +47,8 @@ class ReviewActivity : AppCompatActivity() {
             binding.tvStatus.setBackgroundColor(
                 if (assessment.isHealthy) getColor(R.color.emerald_accent) else getColor(R.color.error_red)
             )
-            // Aplikasi user: tidak menampilkan label sehat/tidak sehat.
-            if (BuildConfig.FLAVOR == "admin") {
-                binding.tvStatus.visibility = View.VISIBLE
-            } else {
-                binding.tvStatus.visibility = View.GONE
-            }
+            // Aplikasi user: label sehat/tidak sehat tidak ditampilkan.
+            binding.tvStatus.visibility = View.GONE
             adapter.submitList(scoreItems)
         }
 
