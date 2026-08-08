@@ -35,10 +35,10 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
     fun getFormItemsCount(): Int = _formItems.size
 
     fun isFormComplete(): Boolean =
-        _formItems.all { !it.isApplicable || it.currentScore > 0 }
+        _formItems.all { !it.isApplicable || it.selectedOptionIndex >= 0 }
 
     fun missingItems(): List<FormItem> =
-        _formItems.filter { it.isApplicable && it.currentScore <= 0 }
+        _formItems.filter { it.isApplicable && it.selectedOptionIndex < 0 }
 
     fun markPhotoTaken(section: String, path: String) {
         photoPaths[section] = path
@@ -63,6 +63,12 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
     fun loadReview(id: String) {
         viewModelScope.launch {
             _review.value = repository.getAssessmentById(id) to repository.getScoreItemsForAssessment(id)
+        }
+    }
+
+    fun syncNow() {
+        viewModelScope.launch {
+            repository.syncPending()
         }
     }
 

@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Rumah Sehat</string>
+    <string name="splash_tagline">Enterprise Inspection &amp; Safety Management</string>
+    <string name="splash_init">INITIALIZING WORKSPACE</string>
     <string name="save_assessment">Simpan &amp; Kirim</string>
     <string name="new_assessment">Penilaian Baru</string>
     <string name="applicable">Tidak Berlaku</string>
@@ -26,9 +28,17 @@
     <string name="assessor_name_label">Nama Petugas</string>
     <string name="company_label">Nama Perusahaan / Puskesmas</string>
     <string name="history_title">Penilaian Tersimpan</string>
+    <string name="sync_banner_title">Status Sinkronisasi</string>
+    <string name="sync_now">Kirim Sekarang</string>
+    <string name="cta_inspeksi_sub">17 indikator + 3 foto</string>
+    <string name="cta_history">Lihat Riwayat</string>
+    <string name="cta_history_sub">Rekap penilaian terdahulu</string>
+    <string name="today_title">Ringkasan Hari Ini</string>
+    <string name="today_completed">Selesai</string>
+    <string name="today_pending">Menunggu Kirim</string>
     <string name="history_empty">Belum ada penilaian.</string>
     <string name="pending_info">%1$d penilaian menunggu dikirim. Akan dikirim otomatis saat ada internet.</string>
-    <string name="level_hint">Kira-kira seberapa lengkap kondisi item ini?</string>
+    <string name="level_hint">Pilih salah satu kondisi yang sesuai.</string>
     <string name="level_poor">Kurang</string>
     <string name="level_fair">Cukup</string>
     <string name="level_good">Baik</string>
@@ -72,10 +82,19 @@
     <string name="photo_sanitation">Foto 2: Sarana Sanitasi (Jamban/Air)</string>
     <string name="photo_kitchen_spal">Foto 3: Area Dapur / SPAL / Sampah</string>
     <string name="btn_take_photo">Ambil Foto</string>
+    <string name="btn_retake_photo">Ganti Foto</string>
+    <string name="photo_hint_missing">Foto belum diambil. Ketuk tombol di bawah untuk membuka kamera.</string>
+    <string name="photo_hint_taken">Foto sudah diambil. Ketuk untuk mengganti.</string>
 
     <!-- Tinjauan (Review) -->
     <string name="review_title">Tinjauan Penilaian</string>
     <string name="review_items_title">Hasil Per Item</string>
     <string name="item_not_applicable">Tidak Berlaku</string>
+
+    <!-- Konfirmasi keluar form -->
+    <string name="exit_confirm_title">Keluar dari Penilaian?</string>
+    <string name="exit_confirm_message">Isian yang belum disimpan akan hilang.</string>
+    <string name="exit_confirm_stay">Lanjut Isi</string>
+    <string name="exit_confirm_leave">Keluar</string>
 
 </resources>

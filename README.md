@@ -24,6 +24,7 @@ Unduh APK terbaru di **Release** GitHub, atau langsung dari `RumahSehat-User.apk
 
 | Versi | Tanggal | Catatan |
 |---|---|---|
+| **v1.1.0** | 2026-08-08 | R8 obfuscation aktif; fix sync redirect Apps Script (tiada PENDING palsu); pembersihan kredensial & kode admin |
 | **v1.0.0** | 2026-08-08 | Rilis pertama: 17 indikator, 3 foto/penilaian, sinkron Google Sheets |
 
 ---

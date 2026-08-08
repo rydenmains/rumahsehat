@@ -1,11 +1,17 @@
 /**
  * ==============================================================================
  * HEALTHY HOME ASSESSMENT APP - BACKEND SCRIPT (Google Apps Script)
- * Version: 2.4.0-MVP-Sheets (17 Indikator + Endpoint Baca Data + 3 Foto per Assessment)
+ * Version: 3.0.0 (17 Indikator berbasis jawaban kata + Deferred AI)
  *
- * - doPost   : menyimpan baris assessment dari aplikasi Android (17 kolom skor)
- * - doGet    : ?action=data -> membaca seluruh baris sheet sebagai JSON (dipakai
- *              dashboard web/laptop dan dashboard admin Android)
+ * - doPost   : menyimpan baris assessment dari aplikasi Android (17 jawaban kata)
+ * - doGet    : ?action=data -> membaca seluruh baris sheet sebagai JSON
+ * - AI       : processPendingAi() dipanggil trigger tiap 10 menit → Gemini
+ *              menganalisis 3 foto + jawaban, menulis 2 kolom hasil.
+ *
+ * TIDAK ADA kalkulator skor di backend. Status SEHAT/TIDAK ditentukan dari:
+ *   1) Jawaban indikator (pilihan kata a/b/c)  → kolom 5..21
+ *   2) Hasil analisis foto oleh Gemini         → kolom 28..29
+ * Total Skor (kolom 22) dikirim dari Android (summary.total_achieved).
  * ==============================================================================
  */
 
@@ -13,10 +19,28 @@ var CONFIG = {
   SHEET_NAME: "Data Assessment",
   DRIVE_FOLDER_NAME: "Healthy Home Photos",
   CUSTOM_FOLDER_ID: "",
-  // Token penulisan (dikirim app via payload.token). Ganti jika bocor.
-  API_TOKEN: "rs_sehat_2026"
+  // Token penulisan (dikirim app via payload.token). Dibaca dari Script Properties
+  // "API_TOKEN" sehingga tidak hardcoded di repo publik. Fallback = nilai lama
+  // hanya agar deployment yang sudah jalan tetap bekerja.
+  API_TOKEN: PropertiesService.getScriptProperties().getProperty("API_TOKEN") || "rs_sehat_2026",
+  // Model visi GRATIS via OpenRouter (suffix :free = $0, tanpa kartu kredit).
+  // Kuota: 50 request/hari (naik ke 1000 jika akun pernah isi kredit $10 sekali).
+  // Terverifikasi support foto. Ganti ke model berbayar (mis. google/gemini-2.5-flash) hanya jika saldo ada.
+  GEMINI_MODEL: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+  // Jumlah baris maksimum diproses per panggilan processPendingAi() (limit runtime).
+  AI_BATCH_SIZE: 5
 };
 
+/** Key OpenRouter diambil dari Script Properties — JANGAN hardcode.
+ *  Buat di https://openrouter.ai/keys lalu simpan sebagai script property "OPENROUTER_API_KEY".
+ */
+function getGeminiKey() {
+  return PropertiesService.getScriptProperties().getProperty("OPENROUTER_API_KEY");
+}
+
+// ---------------------------------------------------------------------------
+// doGet — endpoint baca data
+// ---------------------------------------------------------------------------
 function doGet(e) {
   var action = e && e.parameter && e.parameter.action;
   if (action && action.toLowerCase() === "data") {
@@ -55,6 +79,9 @@ function readDataResponse() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// doPost — simpan assessment (deferred AI: simpan cepat, analisis belakangan)
+// ---------------------------------------------------------------------------
 function doPost(e) {
   try {
     if (!e || !e.postData || !e.postData.contents) {
@@ -72,9 +99,7 @@ function doPost(e) {
     var sheet = setupEnvironment();
 
     // --- PROSES UPLOAD FOTO KE GOOGLE DRIVE (3 SLOT) ---
-    var photoUrls = ["-", "-", "-"];   // URL Foto 1/2/3
-    var photoLengths = 0;              // jumlah slot foto terkirim
-
+    var photoUrls = ["-", "-", "-"];
     var photos = payload.photos || {};
     var sectionKeys = ["house_front", "sanitation", "kitchen_spal"];
 
@@ -94,17 +119,15 @@ function doPost(e) {
           file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
           var base = "https://lh3.googleusercontent.com/d/" + file.getId();
           photoUrls[k] = '=IMAGE("' + base + '")';
-          photoLengths++;
         } catch (e) {
-          // abaikan foto gagal; tetap simpan data skor
+          // abaikan foto gagal; tetap simpan data
         }
       }
     }
 
-    // --- BACA SKOR 17 INDIKATOR DARI PAYLOAD ANDROID ---
-    var s = payload.scores || {};
+    // --- BACA 17 JAWABAN INDIKATOR (kata) DARI PAYLOAD ANDROID ---
+    var a = payload.answers || payload.scores || {};
 
-    // --- SUSUN BARIS DATA ( TOTAL 26 KOLOM ) ---
     var now = new Date();
     var formattedDate = Utilities.formatDate(now, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd HH:mm:ss");
     var summary = payload.summary || {};
@@ -116,34 +139,37 @@ function doPost(e) {
       meta.assessor_name || payload.assessor_name || "-",
       meta.company || payload.company || "-",
 
-      // I. KOMPONEN RUMAH (8 Items)
-      s.langit_langit !== undefined ? s.langit_langit : "-",
-      s.dinding !== undefined ? s.dinding : "-",
-      s.lantai !== undefined ? s.lantai : "-",
-      s.jendela_kamar !== undefined ? s.jendela_kamar : "-",
-      s.jendela_rk !== undefined ? s.jendela_rk : "-",
-      s.ventilasi !== undefined ? s.ventilasi : "-",
-      s.lubang_asap !== undefined ? s.lubang_asap : "-",
-      s.pencahayaan !== undefined ? s.pencahayaan : "-",
+      // I. KOMPONEN RUMAH (8 Items) — jawaban kata
+      a.langit_langit !== undefined ? a.langit_langit : "-",
+      a.dinding !== undefined ? a.dinding : "-",
+      a.lantai !== undefined ? a.lantai : "-",
+      a.jendela_kamar !== undefined ? a.jendela_kamar : "-",
+      a.jendela_rk !== undefined ? a.jendela_rk : "-",
+      a.ventilasi !== undefined ? a.ventilasi : "-",
+      a.lubang_asap !== undefined ? a.lubang_asap : "-",
+      a.pencahayaan !== undefined ? a.pencahayaan : "-",
 
       // II. SARANA SANITASI (4 Items)
-      s.air_bersih !== undefined ? s.air_bersih : "-",
-      s.jamban !== undefined ? s.jamban : "-",
-      s.spal !== undefined ? s.spal : "-",
-      s.tempat_sampah !== undefined ? s.tempat_sampah : "-",
+      a.air_bersih !== undefined ? a.air_bersih : "-",
+      a.jamban !== undefined ? a.jamban : "-",
+      a.spal !== undefined ? a.spal : "-",
+      a.tempat_sampah !== undefined ? a.tempat_sampah : "-",
 
       // III. PERILAKU PENGHUNI (5 Items)
-      s.buka_jendela_kamar !== undefined ? s.buka_jendela_kamar : "-",
-      s.buka_jendela_rk !== undefined ? s.buka_jendela_rk : "-",
-      s.bersih_rumah !== undefined ? s.bersih_rumah : "-",
-      s.buang_tinja_bayi !== undefined ? s.buang_tinja_bayi : "-",
-      s.buang_sampah !== undefined ? s.buang_sampah : "-",
+      a.buka_jendela_kamar !== undefined ? a.buka_jendela_kamar : "-",
+      a.buka_jendela_rk !== undefined ? a.buka_jendela_rk : "-",
+      a.bersih_rumah !== undefined ? a.bersih_rumah : "-",
+      a.buang_tinja_bayi !== undefined ? a.buang_tinja_bayi : "-",
+      a.buang_sampah !== undefined ? a.buang_sampah : "-",
 
       // RINGKASAN & FOTO
-      summary.total_achieved !== undefined ? summary.total_achieved : 0,
+      summary.total_achieved !== undefined ? summary.total_achieved : "",
       summary.status || (summary.is_healthy ? "SEHAT" : "TIDAK SEHAT"),
       payload.notes || "-",
-      photoUrls[0], photoUrls[1], photoUrls[2]
+      photoUrls[0], photoUrls[1], photoUrls[2],
+
+      // ANALISIS AI (2 kolom) — diisi belakangan oleh processPendingAi()
+      "", ""
     ];
 
     sheet.appendRow(newRow);
@@ -155,7 +181,7 @@ function doPost(e) {
       status: "SUCCESS",
       message: "Data berhasil disimpan!",
       assessment_id: payload.assessment_id,
-      photo_url: photoUrl
+      photo_url: photoUrls[0] !== "-" ? photoUrls[0] : null
     }, 200);
 
   } catch (error) {
@@ -165,6 +191,165 @@ function doPost(e) {
     }, 500);
   }
 }
+
+// ---------------------------------------------------------------------------
+// AI — deferred analysis (dipanggil trigger, atau manual)
+// ---------------------------------------------------------------------------
+
+/**
+ * Proses baris yang belum dianalisis (kolom "Status Validasi AI" kosong).
+ * Foto diambil ulang dari Drive (file ID tersimpan di URL kolom). Dipanggil
+ * oleh createAiTrigger() tiap 10 menit. Data tetap tersimpan walau AI gagal.
+ */
+function processPendingAi() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+  if (!sheet || sheet.getLastRow() < 2) return;
+
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
+  var colStatus = headers.indexOf("Status Validasi AI") + 1;
+  var colRecommendation = headers.indexOf("Rekomendasi AI") + 1;
+  if (colStatus === 0 || colRecommendation === 0) return; // header AI belum ada
+
+  var data = sheet.getDataRange().getValues();
+  var processed = 0;
+  for (var r = 1; r < data.length && processed < CONFIG.AI_BATCH_SIZE; r++) {
+    if (String(data[r][colStatus - 1]).trim() !== "") continue; // sudah diproses
+
+    // Susun ulang photos dari kolom URL foto (file ID tersimpan di URL IMAGE).
+    var photos = {};
+    var photoCols = [
+      { header: "URL Foto Komponen Rumah", key: "house_front" },
+      { header: "URL Foto Sarana Sanitasi", key: "sanitation" },
+      { header: "URL Foto Perilaku Penghuni", key: "kitchen_spal" }
+    ];
+    for (var key = 0; key < photoCols.length; key++) {
+      var col = headers.indexOf(photoCols[key].header) + 1;
+      if (col === 0) continue;
+      var cellValue = String(data[r][col - 1] || "");
+      var fileId = (cellValue.match(/\/d\/([^"')]+)/) || [])[1];
+      if (!fileId) continue;
+      try {
+        var blob = DriveApp.getFileById(fileId).getBlob();
+        photos[photoCols[key].key] = Utilities.base64Encode(blob.getBytes(), Utilities.Charset.UTF_8);
+      } catch (e) { /* lewati satu foto gagal */ }
+    }
+
+    var result = analyzeAssessmentWithGemini(photos, {
+      answers: rowAnswers(data[r], headers),
+      summary: { total_achieved: data[r][headers.indexOf("Total Skor")] },
+      is_healthy: String(data[r][headers.indexOf("Status Health")]).indexOf("TIDAK") === -1,
+      status: String(data[r][headers.indexOf("Status Health")] || "SEHAT")
+    });
+
+    sheet.getRange(r + 1, colStatus).setValue(result.flag);
+    sheet.getRange(r + 1, colRecommendation).setValue(result.recommendation);
+    processed++;
+  }
+}
+
+/** Setup trigger yang memanggil processPendingAi tiap X menit. Jalankan sekali manual. */
+function createAiTrigger() {
+  ScriptApp.newTrigger("processPendingAi")
+    .timeBased()
+    .everyMinutes(10)
+    .create();
+}
+
+/**
+ * Analisis 3 foto + jawaban kata via Gemini.
+ * Gunakan SEMUA photo key (house_front, sanitation, kitchen_spal).
+ * Output konsisten: { is_valid, flag, recommendation }.
+ * Fallback bila key kosong / foto tak lengkap / request gagal → data tetap tersimpan.
+ */
+function analyzeAssessmentWithGemini(photos, assessment) {
+  var fallback = function (flag, recommendation) {
+    return { is_valid: true, flag: flag, recommendation: recommendation };
+  };
+
+  var apiKey = getGeminiKey();
+  if (!apiKey) {
+    return fallback("Analisis AI dilewati", "Key OpenRouter belum diisi di Script Properties (OPENROUTER_API_KEY).");
+  }
+
+  var sectionKeys = ["house_front", "sanitation", "kitchen_spal"];
+  var content = [];
+  var photoCount = 0;
+  for (var k = 0; k < sectionKeys.length; k++) {
+    var dataB64 = photos[sectionKeys[k]];
+    if (!dataB64) continue;
+    if (dataB64.indexOf("base64,") !== -1) dataB64 = dataB64.split("base64,")[1];
+    content.push({
+      type: "image_url",
+      image_url: { url: "data:image/jpeg;base64," + dataB64 }
+    });
+    photoCount++;
+  }
+  if (photoCount === 0) {
+    return fallback("Analisis AI dilewati", "Tidak ada foto untuk dianalisis.");
+  }
+
+  var answersText = "";
+  var answers = assessment.answers || {};
+  Object.keys(answers).forEach(function (key) {
+    answersText += key + "=" + answers[key] + "; ";
+  });
+
+  var prompt = [
+    "Kamu adalah asisten Dinas Kesehatan untuk validasi Rumah Sehat.",
+    "Berikut 3 foto kondisi rumah (depan, sanitasi, dapur/SPAL).",
+    "Jawaban petugas (indikator): " + answersText,
+    "Status sementara: " + assessment.status + " (is_healthy=" + assessment.is_healthy + ").",
+    "",
+    "Nilai dari jawaban + foto: apakah rumah ini SEHAT?",
+    "Jawab JSON HANYA dengan format:",
+    '{ "is_valid": true/false, "flag": "SEHAT"|"TIDAK SEHAT"|"PERLU PERBAIKAN", "recommendation": "teks saran singkat (Indonesia, max 2 kalimat)" }',
+    "Jika foto buram/tidak jelas, is_valid=false."
+  ].join("\n");
+
+  content.unshift({ type: "text", text: prompt });
+
+  var requestBody = {
+    model: CONFIG.GEMINI_MODEL,
+    messages: [{ role: "user", content: content }],
+    temperature: 0.2,
+    // Batasi token agar tidak melebihi saldo OpenRouter (bila tanpa ini, default 8k+ dan bisa 402).
+    max_tokens: 800,
+    response_format: { type: "json_object" }
+  };
+
+  try {
+    var response = UrlFetchApp.fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "post",
+      headers: { Authorization: "Bearer " + apiKey },
+      contentType: "application/json",
+      payload: JSON.stringify(requestBody),
+      muteHttpExceptions: true,
+      timeoutSeconds: 45
+    });
+    var result = JSON.parse(response.getContentText());
+    var text = result && result.choices && result.choices[0]
+      && result.choices[0].message && result.choices[0].message.content;
+    if (result.error) {
+      return fallback("Analisis AI dilewati", "Error OpenRouter: " + result.error.message);
+    }
+    if (!text) {
+      return fallback("Analisis AI dilewati", "Respons OpenRouter kosong (" + response.getResponseCode() + ").");
+    }
+    var parsed = JSON.parse(text);
+    return {
+      is_valid: !!parsed.is_valid,
+      flag: String(parsed.flag || assessment.status || "SEHAT"),
+      recommendation: String(parsed.recommendation || "-")
+    };
+  } catch (error) {
+    return fallback("Analisis AI dilewati", "Error OpenRouter: " + error.toString());
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
 
 function createJsonResponse(data, statusCode) {
   return ContentService
@@ -184,6 +369,31 @@ function getOrCreateFolder() {
   }
 }
 
+/** Mapping header kolom (17 indikator) → key jawaban (sama dgn Android). */
+var ANSWER_KEY_BY_HEADER = {
+  "1. Langit-langit": "langit_langit", "2. Dinding": "dinding", "3. Lantai": "lantai",
+  "4. Jendela Kamar": "jendela_kamar", "5. Jendela RK": "jendela_rk",
+  "6. Ventilasi": "ventilasi", "7. Lubang Asap": "lubang_asap",
+  "8. Pencahayaan": "pencahayaan",
+  "9. Air Bersih": "air_bersih", "10. Jamban": "jamban", "11. SPAL": "spal",
+  "12. Tempat Sampah": "tempat_sampah",
+  "13. Buka Jend. Kamar": "buka_jendela_kamar", "14. Buka Jend. RK": "buka_jendela_rk",
+  "15. Bersih Rumah": "bersih_rumah", "16. Tinja Bayi": "buang_tinja_bayi",
+  "17. Buang Sampah": "buang_sampah"
+};
+
+/** Baca 17 jawaban kata dari satu baris sheet. */
+function rowAnswers(row, headers) {
+  var answers = {};
+  for (var h = 0; h < headers.length; h++) {
+    var key = ANSWER_KEY_BY_HEADER[headers[h]];
+    if (key && row[h] !== "" && row[h] !== undefined && row[h] !== null) {
+      answers[key] = row[h];
+    }
+  }
+  return answers;
+}
+
 function setupEnvironment() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
@@ -194,8 +404,7 @@ function setupEnvironment() {
 
   var hasHeaders = sheet.getLastRow() > 1; // = header + minimal 1 baris data
 
-  // Kalau sheet kosong (belum ada header, atau cuma sisa header lama),
-  // tulis ulang menjadi skema 26 kolom saat ini.
+  // Kalau sheet kosong (belum ada header), tulis skema 29 kolom saat ini.
   if (!hasHeaders) {
     if (sheet.getLastRow() > 0) {
       sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).clearContent();
@@ -215,7 +424,10 @@ function setupEnvironment() {
       "16. Tinja Bayi", "17. Buang Sampah",
 
       // Ringkasan
-      "Total Skor", "Status Health", "Catatan Field", "URL Foto Komponen Rumah", "URL Foto Sarana Sanitasi", "URL Foto Perilaku Penghuni"
+      "Total Skor", "Status Health", "Catatan Field", "URL Foto Komponen Rumah", "URL Foto Sarana Sanitasi", "URL Foto Perilaku Penghuni",
+
+      // Analisis AI (2 kolom)
+      "Status Validasi AI", "Rekomendasi AI"
     ];
 
     if (sheet.getLastRow() > 0) sheet.clear();
@@ -235,7 +447,41 @@ function setupEnvironment() {
       }
     }
     sheet.setFrozenRows(1);
+  } else {
+    // Migrasi sheet lama (data sudah ada): pastikan kolom AI & foto lengkap.
+    ensureAiColumns(sheet);
   }
 
   return sheet;
+}
+
+/** Append kolom yang hilang (foto & AI) ke header tanpa menghapus data lama. */
+function ensureAiColumns(sheet) {
+  var lastCol = sheet.getLastColumn();
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(String);
+
+  var required = [
+    "URL Foto Komponen Rumah",
+    "URL Foto Sarana Sanitasi",
+    "URL Foto Perilaku Penghuni",
+    "Status Validasi AI",
+    "Rekomendasi AI"
+  ];
+
+  var toAdd = [];
+  for (var i = 0; i < required.length; i++) {
+    if (headers.indexOf(required[i]) === -1) {
+      toAdd.push(required[i]);
+    }
+  }
+
+  if (toAdd.length > 0) {
+    var startCol = lastCol + 1;
+    sheet.getRange(1, startCol, 1, toAdd.length).setValues([toAdd]);
+    var headerRange = sheet.getRange(1, startCol, 1, toAdd.length);
+    headerRange.setFontWeight("bold");
+    headerRange.setBackground("#1F4E79");
+    headerRange.setFontColor("#FFFFFF");
+    headerRange.setHorizontalAlignment("center");
+  }
 }

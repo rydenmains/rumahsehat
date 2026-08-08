@@ -4,6 +4,13 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+import java.util.Properties
+
+val localProps = Properties().apply {
+    val f = file("../local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
 android {
     namespace = "com.rumahsehat"
     compileSdk = 35
@@ -12,8 +19,8 @@ android {
         applicationId = "com.rumahsehat"
         minSdk = 23
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ksp {
@@ -24,9 +31,13 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("../rumahsehat-upload.keystore")
-            storePassword = System.getenv("RS_KEYSTORE_PASSWORD") ?: "***REDACTED-PASSWORD***"
+            // Password dibaca dari ENV atau local.properties (keduanya tidak masuk git).
+            val password = System.getenv("RS_KEYSTORE_PASSWORD")
+                ?: localProps["keystore.password"] as String?
+                ?: throw GradleException("Set RS_KEYSTORE_PASSWORD atau keystore.password di local.properties")
+            storePassword = password
             keyAlias = "rumahsehat"
-            keyPassword = "***REDACTED-PASSWORD***"
+            keyPassword = password
         }
     }
 
