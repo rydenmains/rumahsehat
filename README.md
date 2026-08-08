@@ -1,6 +1,6 @@
 # Rumah Sehat
 
-**Aplikasi penilaian kesehatan lingkungan rumah (jamban, air bersih, SPAL) berbasis Android.**
+**Aplikasi penilaian kesehatan lingkungan rumah (jamban, air bersih) berbasis Android.**
 
 Alat bantu petugas lapangan untuk mengaudit rumah sehat sesuai indikator komponen rumah, sanitasi, dan perilaku penghuni. Semua data tersimpan otomatis ke **Google Sheets** tanpa perlu koneksi stabil.
 
