@@ -53,6 +53,7 @@ Hasil penilaian berupa label status:
 
 | Versi | Catatan |
 |---|---|
+| **v1.3.2** | Data tidak lagi terkirim dobel (server cek duplikat), dan catatan dari semua soal digabung ke satu kolom catatan. |
 | **v1.3.1** | Perbaikan pengiriman data ke server dan tampilan saat sinkron (ada keterangan berhasil/gagal). |
 | **v1.3.0** | Tampilan lebih segar dengan menu bawah, pengiriman data lebih tahan terhadap sinyal lemah, dan foto lebih ringan saat dikirim. |
 | **v1.2.0** | Keamanan data ditingkatkan dan pengiriman data diperbaiki. |

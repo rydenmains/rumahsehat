@@ -142,6 +142,24 @@ function doPost(e) {
       throw new Error("Sheet '" + CONFIG.SHEET_NAME + "' tidak ditemukan / gagal dibuat.");
     }
 
+    // IDEMPOTENSI: kalau assessment_id sudah pernah masuk, jangan appendRow lagi.
+    // Mencegah duplikat saat app retry (jaringan putus setelah backend sukses,
+    // tombol sync ditekan dua kali, atau worker + manual jalan bersamaan).
+    if (payload.assessment_id) {
+      var usedIds = SpreadsheetApp.flush();
+      var existingRows = sheet.getRange(2, 1, Math.max(0, sheet.getLastRow() - 1), 1).getValues();
+      var strId = String(payload.assessment_id);
+      for (var i = 0; i < existingRows.length; i++) {
+        if (String(existingRows[i][0]) === strId) {
+          return createJsonResponse({
+            status: "SUCCESS",
+            message: "Data sudah ada, dilewati (idempotent).",
+            assessment_id: payload.assessment_id
+          }, 200);
+        }
+      }
+    }
+
     // --- PROSES UPLOAD FOTO KE GOOGLE DRIVE (3 SLOT) ---
     // Setiap foto ditangani mandiri (try/catch per slot): kegagalan satu foto
     // JANGAN menghalangi appendRow — data teks indikator tetap tersimpan.

@@ -127,10 +127,16 @@ object AssessmentSync {
         return if (option != null) "${option.letter}. ${option.label}" else "-"
     }
 
+    /** Gabung semua catatan petugas jadi satu cell (kolom "Catatan Field").
+     *  Contoh: "1.3: Lantai retak | 2.2: Jamban bau". */
+    private fun buildNotes(items: List<ScoreItem>): String =
+        items.filter { !it.reason.isNullOrBlank() }
+            .joinToString(" | ") { "${it.itemId}: ${it.reason}" }
+
     private fun buildPayload(assessment: Assessment, items: List<ScoreItem>, photos: Map<String, String>) = JSONObject().apply {
         // Bentuk payload sesuai skema backend Google Apps Script (Code.gs).
         put("assessment_id", assessment.id)
-        put("notes", items.firstNotNullOfOrNull { it.reason } ?: "")
+        put("notes", buildNotes(items))
         put("token", BuildConfig.API_TOKEN)
 
         put("meta", JSONObject().apply {
