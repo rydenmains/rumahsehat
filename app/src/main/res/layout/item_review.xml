@@ -16,19 +16,20 @@
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:layout_weight="1.2"
-            android:textColor="@color/black"
-            android:textSize="14sp" />
+            android:textAppearance="@style/TextAppearance.RumahSehat.Body.Large"
+            android:textColor="@color/on_surface" />
 
         <TextView
             android:id="@+id/tvLevel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:textColor="@color/forest_green"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.RumahSehat.Label.Large"
+            android:textColor="@color/forest_green" />
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

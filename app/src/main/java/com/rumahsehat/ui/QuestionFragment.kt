@@ -60,14 +60,29 @@ class QuestionFragment : Fragment() {
             )
             tvQuestionTitle.setText(item.titleRes)
 
-            photoCaption = when (item.id.substringBefore('.')) {
+            val sectionPrefix = item.id.substringBefore('.')
+            val sectionLabelRes = when (sectionPrefix) {
+                "1" -> R.string.section_housing_label
+                "2" -> R.string.section_sanitation_label
+                else -> R.string.section_behavior_label
+            }
+            val sectionBannerRes = when (sectionPrefix) {
+                "1" -> R.string.cat_housing
+                "2" -> R.string.cat_sanitation
+                else -> R.string.cat_behavior
+            }
+            tvSectionName.setText(sectionLabelRes)
+            tvSectionBanner.setText(sectionBannerRes)
+            val isSectionFirst = item.id.endsWith(".1")
+            cvSectionBanner.visibility = if (isSectionFirst) View.VISIBLE else View.GONE
+
+            photoCaption = when (sectionPrefix) {
                 "1" -> R.string.photo_house_front
                 "2" -> R.string.photo_sanitation
                 else -> R.string.photo_kitchen_spal
             }
             sectionKey = AssessmentViewModel.photoKeyFor(item.id)
             // Foto hanya 3, diambil sekali per bagian => tampilkan tombol hanya di item pertama (1.1/2.1/3.1).
-            val isSectionFirst = item.id.endsWith(".1")
             tvPhotoCaption.visibility = if (isSectionFirst) View.VISIBLE else View.GONE
             tvPhotoCaption.setText(photoCaption)
             btnPhoto.setText(R.string.btn_take_photo)

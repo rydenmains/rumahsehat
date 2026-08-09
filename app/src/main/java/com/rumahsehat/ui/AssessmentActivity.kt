@@ -31,6 +31,13 @@ class AssessmentActivity : AppCompatActivity() {
             override fun onPageSelected(position: Int) {
                 updateNavigationButtons(position, totalQuestions)
                 binding.progressBar.progress = ((position + 1) * 100) / totalQuestions
+                // Satu bar progres, warna mengikuti section (BAGIAN I/II/III).
+                val sectionPrefix = viewModel.getFormItemAt(position).id.substringBefore('.')
+                binding.progressBar.setIndicatorColor(when (sectionPrefix) {
+                    "1" -> getColor(R.color.forest_green)
+                    "2" -> getColor(R.color.emerald_accent)
+                    else -> getColor(R.color.on_primary_container)
+                })
             }
         })
 

@@ -1,138 +1,82 @@
 # Rumah Sehat
 
-**Aplikasi penilaian kesehatan lingkungan rumah (jamban, air bersih) berbasis Android.**
+**Aplikasi Android untuk penilaian kesehatan lingkungan rumah.**
 
-Alat bantu petugas lapangan untuk mengaudit rumah sehat sesuai indikator komponen rumah, sanitasi, dan perilaku penghuni. Semua data tersimpan otomatis ke **Google Sheets** tanpa perlu koneksi stabil.
+Bikin penilaian kesehatan rumah jadi cepat dan rapi. Isi 17 indikator, foto kondisi rumah, dan semua data langsung tersimpan otomatis. Gak perlu khawatir kehilangan data saat sinyal putus, semua aman tersimpan di HP dulu.
 
-[![Android](https://img.shields.io/badge/platform-Android%206.0%2B-0F6A4B?style=flat-square&logo=android&logoColor=white)](https://www.android.com) [![Kotlin](https://img.shields.io/badge/kotlin-2.x-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org) [![Room](https://img.shields.io/badge/storage-Room-brightgreen?style=flat-square)](https://developer.android.com/training/data-storage/room) [![License](https://img.shields.io/badge/license-MIT-1A1A1A?style=flat-square)](LICENSE)
-
----
-
-## Ringkasan
-
-Petugas menilai rumah via aplikasi, dan data langsung terkirim ke spreadsheet.
-
-| Versi | Label | Untuk |
+| Versi | File APK | Buat siapa |
 |---|---|---|
-| **Rumah Sehat** | `RumahSehat-User.apk` | Petugas lapangan: input penilaian + foto |
+| Rumah Sehat | `RumahSehat-User.apk` | Petugas lapangan yang isi penilaian |
 
 ---
 
-## Rilis
+## Kenapa harus Rumah Sehat?
 
-Unduh APK terbaru di **Release** GitHub, atau langsung dari `RumahSehat-User.apk` di root repo.
-
-| Versi | Tanggal | Catatan |
-|---|---|---|
-| **v1.2.0** | 2026-08-09 | Security hardening: token API dipindah dari source ke konfigurasi lokal, endpoint baca data (`?action=data`) dikunci token, foto Drive privat (tanpa link publik), signing release opsional untuk CI/F-Droid |
-| **v1.1.0** | 2026-08-08 | R8 obfuscation aktif; fix sync redirect Apps Script (tiada PENDING palsu); pembersihan kredensial & kode admin |
-| **v1.0.0** | 2026-08-08 | Rilis pertama: 17 indikator, 3 foto/penilaian, sinkron Google Sheets |
+- **Cara pakai simpel.** Jawab pertanyaan satu per satu, foto rumah, lalu simpan.
+- **Tetap jalan tanpa internet.** Data disimpan dulu di HP dan dikirim otomatis begitu ada sinyal.
+- **Data lengkap.** 17 indikator mencakup komponen rumah, air bersih, jamban, SPAL, sampai perilaku penghuni.
+- **Foto ikut tersimpan.** 3 foto per penilaian ikut terkirim dan mudah dilihat kembali.
 
 ---
 
-## Download & Install
+## Cara pasang
 
-### Opsi 1: APK langsung (GitHub)
+1. Download file `RumahSehat-User.apk` di bagian **Release** halaman ini atau dari file APK di folder utama.
+2. Buka file tersebut di HP.
+3. Kalau muncul peringatan *"instalasi dari sumber tidak dikenal"*, izinkan. Wajar untuk aplikasi yang tidak lewat toko resmi.
+4. Pasang dan buka aplikasinya.
 
-1. Unduh `RumahSehat-User-signed.apk` dari [Releases](../../releases).
-2. Verifikasi hash SHA256 dengan `checksums.txt` di release yang sama:
-   ```powershell
-   Get-FileHash -Algorithm SHA256 RumahSehat-User-signed.apk
-   ```
-3. Aktifkan "Izinkan instalasi dari sumber tidak dikenal" untuk browser Anda.
-4. Pasang.
+> Kenapa ada peringatan? Karena aplikasi ini dibagikan langsung, bukan lewat toko aplikasi. Itu hal biasa untuk semua APK. File yang kamu download sudah kami pastikan asli dan aman.
 
-> **Kenapa Chrome memperingatkan?** Aplikasi ini tidak ada di Google Play — peringatan standar untuk semua APK sideload. Keaslian APK diverifikasi lewat hash SHA256 di atas.
+---
 
-### Opsi 2: F-Droid (dalam proses)
+## Cara pakai
 
-Segera tersedia di repositori F-Droid (toko aplikasi open source, build dari source).
+1. Buka aplikasi, lalu isi nama petugas dan perusahaan.
+2. Jawab 17 indikator sesuai kondisi rumah yang dinilai.
+3. Ambil 3 foto: bagian depan rumah, sarana sanitasi, dan dapur atau SPAL.
+4. Tekan **Simpan**.
+5. Selesai. Data terkirim otomatis ke pusat data begitu jaringan tersambung.
 
-### Opsi 3: Firebase App Distribution (untuk tester)
+---
 
-Tambahkan tester lewat invite link Firebase, distribusi via CLI:
-```bash
-npm i -g firebase-tools
-firebase login
-firebase appdistribution:distribute app\build\outputs\apk\user\release\*.apk --app <APP_ID> --groups testers
+## Cara baca hasil
+
+Hasil penilaian berupa label status:
+
+- **SEHAT** jika indikator rumah dan sanitasi sudah terpenuhi.
+- **TIDAK SEHAT** jika masih ada indikator utama yang belum terpenuhi.
+
+---
+
+## Versi terdahulu
+
+| Versi | Catatan |
+|---|---|
+| **v1.3.0** | Tampilan lebih segar dengan menu bawah, pengiriman data lebih tahan terhadap sinyal lemah, dan foto lebih ringan saat dikirim. |
+| **v1.2.0** | Keamanan data ditingkatkan dan pengiriman data diperbaiki. |
+| **v1.1.0** | Data yang tertunda kini terkirim dengan benar. |
+| **v1.0.0** | Rilis pertama: 17 indikator, 3 foto, sinkron otomatis. |
+
+---
+
+## Cara buat sendiri (untuk developer)
+
+```powershell
+# Versi debug
+.\gradlew assembleUserDebug
+# Versi rilis
+.\gradlew assembleUserRelease
 ```
 
----
-
-## Fitur
-
-- **17 indikator** penilaian rumah sehat (komponen rumah, sanitasi, perilaku)
-- **3 foto** per penilaian, terkirim ke Google Drive + tampil di Sheet
-- **Offline-first**: penilaian disimpan lokal, disinkron otomatis saat online
-- **Rekap otomatis** di dashboard web dari Google Sheet
-
----
-
-## Cara Menggunakan (User)
-
-1. Download `RumahSehat-User.apk` dari **Releases** atau folder root.
-2. Pasang di HP — izinkan instalasi *unknown sources*.
-3. Isi nama petugas & perusahaan.
-4. Jawab 17 indikator, ambil **3 foto** (rumah, sanitasi, perilaku).
-5. Tekan **Simpan** — data masuk Sheet otomatis.
-
----
-
-## Skor & Status
-
-Penilaian memakai bobot per bagian (komponen rumah 20 poin, sarana sanitasi 100-150 poin, perilaku 20 poin). Aplikasi mengkalkulasi persentase dan menentukan:
-
-- **SEHAT** jika komposisi sanitasi esensial terpenuhi
-- **TIDAK SEHAT** jika indikator esensial tidak terpenuhi
-
----
-
-## Screenshots
-
-*Menunggu tangkapan layar — akan ditaruh di folder ini.* Masukkan `art/screen-form.png` lalu update markup di bawah.
-
-![Form](art/screen-form.png)
-
----
-
-## Sync, Backend & Struktur
-
-Aplikasi menulis ke Google Apps Script (`backend/Code.gs`) yang memproses payload → Drive + Google Sheet.
-
-```
-RumahSehat/
-├── app/                        # Source Android (Kotlin + View XML)
-│   ├── src/main/java/com/rumahsehat/
-│   │   ├── data/             # Room db, DAO, model, remote, repository
-│   │   ├── domain/           # AssessmentCalculator (logika penilaian)
-│   │   ├── sync/             # SyncWorker (retry offline via WorkManager)
-│   │   └── ui/               # Activity, Fragment, adapter, ViewModel
-│   └── proguard-rules.pro    # R8 keep rules (obfuscation release)
-├── backend/
-│   ├── Code.gs          # Apps Script: terima data → Drive + Google Sheets
-│   └── user.html        # Halaman "penilaian saya" per petugas
-├── RumahSehat-User.apk  # Build user (release/debug)
-```
-
----
-
-## Build dari Sumber
-
-```
-# Debug
-./gradlew assembleUserDebug
-# Release (R8 obfuscation aktif)
-./gradlew assembleUserRelease
-```
-
-Hasil release ada di `app/build/outputs/apk/<flavor>/release/`.
+Hasil build ada di `app\build\outputs\apk\user\release\`.
 
 ---
 
 ## Lisensi
 
-MIT - bebas pakai, ubah, dan sebarkan.
+MIT. Bebas dipakai, diubah, dan dibagikan.
 
 ---
 
-*RumahSehat - Rayz*
+*Rumah Sehat* oleh Rayz.

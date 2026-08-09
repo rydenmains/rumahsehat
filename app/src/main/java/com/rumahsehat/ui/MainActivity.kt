@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.rumahsehat.R
 import com.rumahsehat.databinding.ActivityMainBinding
@@ -35,6 +37,30 @@ class MainActivity : AppCompatActivity() {
             binding.tvHistoryTitle.post {
                 binding.scroll.smoothScrollTo(0, binding.tvHistoryTitle.top)
             }
+        }
+
+        binding.bottomNavTabs.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_inspect -> {
+                    startActivity(Intent(this, AssessmentActivity::class.java))
+                    true
+                }
+                R.id.nav_history -> {
+                    binding.tvHistoryTitle.post {
+                        binding.scroll.smoothScrollTo(0, binding.tvHistoryTitle.top)
+                    }
+                    true
+                }
+                else -> {
+                    binding.scroll.smoothScrollTo(0, 0)
+                    true
+                }
+            }
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavTabs) { v, insets ->
+            v.setPadding(0, 0, 0, insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom)
+            insets
         }
 
         viewModel.allAssessments.observe(this) { assessments ->

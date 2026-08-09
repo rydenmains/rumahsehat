@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacing tokens, base unit 8dp -->
+    <dimen name="dimen_edge_margin">16dp</dimen>
+    <dimen name="dimen_stack_sm">4dp</dimen>
+    <dimen name="dimen_stack_md">12dp</dimen>
+    <dimen name="dimen_stack_lg">24dp</dimen>
+
+    <dimen name="dimen_card_radius">16dp</dimen>
+    <dimen name="dimen_control_radius">8dp</dimen>
+    <dimen name="dimen_bottom_nav_pad">104dp</dimen>
+    <dimen name="dimen_sync_banner_pad">16dp</dimen>
+    <dimen name="dimen_cta_badge">44dp</dimen>
+</resources>
