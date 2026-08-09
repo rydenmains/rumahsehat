@@ -27,8 +27,8 @@ android {
         applicationId = "com.rumahsehat"
         minSdk = 23
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ksp {
@@ -49,10 +49,15 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             if (keystorePassword != null) {
                 signingConfig = signingConfigs.getByName("release")
+            } else {
+                // ponytail: tanpa password keystore upload, fallback ke debug key
+                // supaya APK tetap bisa di-install & di-index (ganti di local.properties
+                // kalau mau cert asli: keystore.password=...)
+                signingConfig = signingConfigs.getByName("debug")
             }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

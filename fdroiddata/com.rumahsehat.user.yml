@@ -1,0 +1,43 @@
+# Metadata untuk repositori F-Droid (fdroiddata).
+# Diletakkan di:  metadata/com.rumahsehat.user.yml  (di fork fdroiddata Anda, BUKAN di repo ini)
+# Nama file WAJIB sama dengan applicationId APK = "com.rumahsehat.user" (suffix flavor "user").
+#
+# Catatan penting:
+# - versionName harus PERSIS nama versi di APK hasil build = "1.2.0-user"
+#   (flavor "user" menambah suffix -user). Kalau beda, build F-Droid ditolak.
+# - Commit = hash release v1.2.0. Untuk update otomatis ke rilis berikutnya,
+#   cukup buat tag baru vX.Y.Z — F-Droid pakai UpdateCheckMode: Tags.
+# - Build tidak butuh keystore password (sudah dibuat opsional di app/build.gradle.kts).
+
+Name: Rumah Sehat
+Name[en-US]: Rumah Sehat
+Categories:
+  - Health & Fitness
+  - Science & Education
+License: MIT
+SourceCode: https://github.com/rydenmains/rumahsehat
+IssueTracker: https://github.com/rydenmains/rumahsehat/issues
+Summary: Environmental health assessment for homes
+Description: |
+  RumahSehat is a field worker tool for assessing home health indicators
+  including sanitation and clean water access. Features offline-first data
+  collection with Google Sheets sync.
+
+  Petugas lapangan menilai 17 indikator (komponen rumah, sarana sanitasi,
+  perilaku penghuni), mengunggah 3 foto, dan data tersinkron otomatis ke
+  Google Sheets. Skor tidak ditampilkan; hasil berupa label SEHAT/TIDAK SEHAT.
+
+RepoType: git
+Repo: https://github.com/rydenmains/rumahsehat.git
+
+Builds:
+  - versionName: 1.2.0-user
+    versionCode: 3
+    commit: 5dc7d7dbf674a27e9981a328d5cf87689562ee79
+    gradle:
+      - userRelease
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 1.2.0-user
+CurrentVersionCode: 3

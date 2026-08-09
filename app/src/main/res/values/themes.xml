@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.RumahSehat" parent="Theme.Material3.Light.NoActionBar">
         <item name="windowActionBar">false</item>
@@ -17,13 +18,15 @@
     </style>
 
     <style name="Widget.RumahSehat.Card" parent="Widget.Material3.CardView.Elevated">
-        <item name="cardCornerRadius">16dp</item>
+        <item name="cardCornerRadius">@dimen/dimen_card_radius</item>
         <item name="cardElevation">1dp</item>
         <item name="cardBackgroundColor">@color/surface_lowest</item>
+        <item name="strokeWidth">0.5dp</item>
+        <item name="strokeColor">@color/outline_variant</item>
     </style>
 
     <style name="Widget.RumahSehat.Button" parent="Widget.Material3.Button">
-        <item name="cornerRadius">100dp</item>
+        <item name="cornerRadius">@dimen/dimen_control_radius</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:minHeight">52dp</item>
@@ -33,13 +36,79 @@
     </style>
 
     <style name="Widget.RumahSehat.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
-        <item name="cornerRadius">100dp</item>
+        <item name="cornerRadius">@dimen/dimen_control_radius</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:minHeight">52dp</item>
         <item name="android:fontFamily">@font/inter_family</item>
         <item name="android:textStyle">normal</item>
         <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <style name="Widget.RumahSehat.TextInput" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">@dimen/dimen_control_radius</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/dimen_control_radius</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/dimen_control_radius</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/dimen_control_radius</item>
+        <item name="boxStrokeColor">@color/forest_green</item>
+        <item name="android:fontFamily">@font/inter_family</item>
+    </style>
+
+    <!-- Typography scale (Inter), centralized -->
+    <style name="TextAppearance.RumahSehat.Headline.Large" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:fontFamily">@font/inter_family</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="TextAppearance.RumahSehat.Headline.Medium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/inter_family</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="TextAppearance.RumahSehat.Title.Large" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/inter_family</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textFontWeight">500</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="TextAppearance.RumahSehat.Title.Medium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">@font/inter_family</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:letterSpacing">0.15</item>
+    </style>
+
+    <style name="TextAppearance.RumahSehat.Body.Large" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/inter_family</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textFontWeight">400</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="TextAppearance.RumahSehat.Body.Medium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/inter_family</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textFontWeight">400</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="TextAppearance.RumahSehat.Label.Large" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/inter_family</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textFontWeight">500</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+
+    <style name="TextAppearance.RumahSehat.Label.Medium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/inter_family</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textFontWeight">500</item>
+        <item name="android:letterSpacing">0.5</item>
     </style>
 
     <style name="AlertDialogCustom" parent="Theme.Material3.DayNight.Dialog.Alert">

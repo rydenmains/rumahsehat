@@ -1,0 +1,75 @@
+{
+  "repo": {
+    "timestamp": 1786295829000,
+    "version": 20002,
+    "name": "Rumah Sehat Repo",
+    "icon": "icon.png",
+    "address": "https://rydenmains.github.io/rumahsehat/fdroid/repo",
+    "description": "RumahSehat own F-Droid repository"
+  },
+  "requests": {
+    "install": [],
+    "uninstall": []
+  },
+  "apps": [
+    {
+      "categories": [
+        "Health & Fitness"
+      ],
+      "suggestedVersionCode": "4",
+      "description": "RumahSehat is a field worker tool for assessing home health indicators\nincluding sanitation and clean water access. Features offline-first data\ncollection with Google Sheets sync.\n\nPetugas lapangan menilai 17 indikator (komponen rumah, sarana sanitasi,\nperilaku penghuni), mengunggah 3 foto, dan data tersinkron otomatis ke\nGoogle Sheets. Skor tidak ditampilkan; hasil berupa label SEHAT/TIDAK SEHAT.",
+      "issueTracker": "https://github.com/rydenmains/rumahsehat/issues",
+      "license": "MIT",
+      "name": "Rumah Sehat",
+      "sourceCode": "https://github.com/rydenmains/rumahsehat",
+      "summary": "Environmental health assessment for homes",
+      "added": 1786295829000,
+      "packageName": "com.rumahsehat.user",
+      "lastUpdated": 1786295829000
+    }
+  ],
+  "packages": {
+    "com.rumahsehat.user": [
+      {
+        "added": 1786295829000,
+        "apkName": "com.rumahsehat.user_4.apk",
+        "hash": "bf25c58c3b8fde01ce7458e18a84064031c63d8ac98bb3e22e04540094858e30",
+        "hashType": "sha256",
+        "minSdkVersion": 23,
+        "packageName": "com.rumahsehat.user",
+        "sig": "abb1b39d2d889e679b8bbc88fcd770fc",
+        "signer": "16004b4a83171750cacb2cf74ba91fe35be6999c5b3e8f7822bdef1c2e10b9c4",
+        "size": 6145391,
+        "targetSdkVersion": 35,
+        "uses-permission": [
+          [
+            "android.permission.INTERNET",
+            null
+          ],
+          [
+            "android.permission.WAKE_LOCK",
+            null
+          ],
+          [
+            "android.permission.ACCESS_NETWORK_STATE",
+            null
+          ],
+          [
+            "android.permission.RECEIVE_BOOT_COMPLETED",
+            null
+          ],
+          [
+            "android.permission.FOREGROUND_SERVICE",
+            null
+          ],
+          [
+            "com.rumahsehat.user.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+            null
+          ]
+        ],
+        "versionCode": 4,
+        "versionName": "1.3.0-user"
+      }
+    ]
+  }
+}

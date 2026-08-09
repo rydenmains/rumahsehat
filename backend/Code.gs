@@ -88,6 +88,17 @@ function readDataResponse() {
 // doPost — simpan assessment (deferred AI: simpan cepat, analisis belakangan)
 // ---------------------------------------------------------------------------
 function doPost(e) {
+  // LockService: cegah dua request menulis baris secara bersamaan (race condition).
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000); // tunggu maks 15 detik bila request lain sedang proses
+  } catch (lockError) {
+    return createJsonResponse({
+      status: "ERROR",
+      message: "Server sedang sibuk, coba lagi."
+    }, 503);
+  }
+
   try {
     if (!e || !e.postData || !e.postData.contents) {
       throw new Error("Payload request kosong atau tidak valid.");
@@ -102,8 +113,13 @@ function doPost(e) {
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = setupEnvironment();
+    if (!sheet) {
+      throw new Error("Sheet '" + CONFIG.SHEET_NAME + "' tidak ditemukan / gagal dibuat.");
+    }
 
     // --- PROSES UPLOAD FOTO KE GOOGLE DRIVE (3 SLOT) ---
+    // Setiap foto ditangani mandiri (try/catch per slot): kegagalan satu foto
+    // JANGAN menghalangi appendRow — data teks indikator tetap tersimpan.
     var photoUrls = ["-", "-", "-"];
     var photos = payload.photos || {};
     var sectionKeys = ["house_front", "sanitation", "kitchen_spal"];
@@ -121,10 +137,10 @@ function doPost(e) {
           var fileName = (payload.assessment_id || "ASM_" + new Date().getTime()) + "_" + sectionKeys[k] + ".jpg";
           var blob = Utilities.newBlob(decodedImage, "image/jpeg", fileName);
           var file = folder.createFile(blob);
-          // Privat (default Drive): foto HANYA terlihat pemilik spreadsheet.
-          // =IMAGE() tetap tampil untuk pemilik; tidak ada link publik yang bocor.
-          var base = "https://lh3.googleusercontent.com/d/" + file.getId();
-          photoUrls[k] = '=IMAGE("' + base + '")';
+          // Izinkan siapa pun yang punya link untuk melihat foto.
+          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          // Simpan URL sebagai teks biasa yang bisa diklik, bukan rumus =IMAGE().
+          photoUrls[k] = "https://drive.google.com/file/d/" + file.getId() + "/view";
         } catch (e) {
           // abaikan foto gagal; tetap simpan data
         }
@@ -191,10 +207,13 @@ function doPost(e) {
     }, 200);
 
   } catch (error) {
+    // Semua error ditangkap rapi: balasan JSON status ERROR (tidak pernah response polos).
     return createJsonResponse({
       status: "ERROR",
       message: error.toString()
     }, 500);
+  } finally {
+    try { lock.releaseLock(); } catch (ignored) {}
   }
 }
 
@@ -233,7 +252,7 @@ function processPendingAi() {
       var col = headers.indexOf(photoCols[key].header) + 1;
       if (col === 0) continue;
       var cellValue = String(data[r][col - 1] || "");
-      var fileId = (cellValue.match(/\/d\/([^"')]+)/) || [])[1];
+      var fileId = (cellValue.match(/\/d\/([a-zA-Z0-9_-]+)/) || [])[1];
       if (!fileId) continue;
       try {
         var blob = DriveApp.getFileById(fileId).getBlob();

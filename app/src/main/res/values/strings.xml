@@ -25,6 +25,7 @@
     <string name="greeting_assessor">Petugas</string>
     <string name="greeting_subtitle">Pilih mulai untuk menilai kondisi rumah warga.</string>
     <string name="start_assessment">Mulai Penilaian</string>
+    <string name="start_inspection">Mulai Inspeksi Baru</string>
     <string name="assessor_name_label">Nama Petugas</string>
     <string name="company_label">Nama Perusahaan / Puskesmas</string>
     <string name="history_title">Penilaian Tersimpan</string>
@@ -90,6 +91,16 @@
     <string name="review_title">Tinjauan Penilaian</string>
     <string name="review_items_title">Hasil Per Item</string>
     <string name="item_not_applicable">Tidak Berlaku</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Beranda</string>
+    <string name="nav_inspect">Inspeksi</string>
+    <string name="nav_history">Riwayat</string>
+
+    <!-- Label section aktif (uppercase) -->
+    <string name="section_housing_label">KOMPONEN RUMAH</string>
+    <string name="section_sanitation_label">SARANA SANITASI</string>
+    <string name="section_behavior_label">PERILAKU PENGHUNI</string>
 
     <!-- Konfirmasi keluar form -->
     <string name="exit_confirm_title">Keluar dari Penilaian?</string>

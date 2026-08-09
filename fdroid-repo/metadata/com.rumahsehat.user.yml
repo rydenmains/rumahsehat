@@ -1,0 +1,18 @@
+# Metadata untuk repositori F-Droid self-hosted (binary repo, bukan fdroiddata).
+# APK prebuilt ditaruh di repo/ dan di-index oleh `fdroid update`.
+
+Categories:
+  - Health & Fitness
+License: MIT
+SourceCode: https://github.com/rydenmains/rumahsehat
+IssueTracker: https://github.com/rydenmains/rumahsehat/issues
+Name: Rumah Sehat
+Summary: Environmental health assessment for homes
+Description: |
+  RumahSehat is a field worker tool for assessing home health indicators
+  including sanitation and clean water access. Features offline-first data
+  collection with Google Sheets sync.
+
+  Petugas lapangan menilai 17 indikator (komponen rumah, sarana sanitasi,
+  perilaku penghuni), mengunggah 3 foto, dan data tersinkron otomatis ke
+  Google Sheets. Skor tidak ditampilkan; hasil berupa label SEHAT/TIDAK SEHAT.

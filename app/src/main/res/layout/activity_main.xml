@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_warm">
+    android:background="@color/background_warm"
+    android:orientation="vertical">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -23,51 +24,52 @@
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scroll"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/dimen_bottom_nav_pad">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="20dp"
-            android:paddingBottom="24dp">
+            android:paddingHorizontal="@dimen/dimen_edge_margin"
+            android:paddingTop="@dimen/dimen_stack_md"
+            android:paddingBottom="@dimen/dimen_stack_lg">
 
-            <!-- Hero -->
+            <!-- Greeting -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:text="@string/greeting_hello"
-                android:textColor="@color/text_secondary"
-                android:textSize="16sp" />
+                android:textAppearance="@style/TextAppearance.RumahSehat.Body.Large"
+                android:textColor="@color/on_surface_variant" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/greeting_assessor"
-                android:textColor="@color/black"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.RumahSehat.Headline.Large"
+                android:textColor="@color/on_surface" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="@dimen/dimen_stack_sm"
                 android:text="@string/greeting_subtitle"
-                android:textColor="@color/text_secondary"
-                android:textSize="15sp" />
+                android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+                android:textColor="@color/on_surface_variant" />
 
             <!-- Sync banner -->
             <LinearLayout
                 android:id="@+id/llSyncBanner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="@dimen/dimen_stack_lg"
                 android:background="@drawable/bg_sync_banner"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="14dp"
+                android:padding="@dimen/dimen_sync_banner_pad"
                 android:visibility="gone">
 
                 <ImageView
@@ -80,7 +82,7 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="@dimen/dimen_stack_md"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -88,17 +90,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/sync_banner_title"
-                        android:textColor="@color/on_surface"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:textAppearance="@style/TextAppearance.RumahSehat.Label.Large"
+                        android:textColor="@color/on_surface" />
 
                     <TextView
                         android:id="@+id/tvPendingInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="12sp" />
+                        android:layout_marginTop="@dimen/dimen_stack_sm"
+                        android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+                        android:textColor="@color/on_surface_variant" />
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
@@ -111,125 +112,153 @@
                     android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- Bento CTA -->
-            <LinearLayout
+            <!-- CTA: Mulai Inspeksi Baru (full-width, forest green) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnStartNew"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:orientation="horizontal">
+                android:layout_marginTop="@dimen/dimen_stack_lg"
+                android:foreground="@drawable/bg_ripple"
+                app:cardBackgroundColor="@color/forest_green"
+                app:strokeWidth="0dp">
 
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/btnStartNew"
-                    style="@style/Widget.RumahSehat.Card"
-                    android:layout_width="0dp"
+                <FrameLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    android:layout_weight="1"
-                    android:foreground="?attr/selectableItemBackground">
+                    android:minHeight="110dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@color/forest_green"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="16dp">
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="@dimen/dimen_edge_margin">
 
-                        <ImageView
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_assignment"
-                            app:tint="@color/on_primary" />
+                        <FrameLayout
+                            android:layout_width="@dimen/dimen_cta_badge"
+                            android:layout_height="@dimen/dimen_cta_badge"
+                            android:background="@drawable/bg_badge_white">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_assignment"
+                                app:tint="@color/on_primary" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:gravity="center"
-                            android:text="@string/start_assessment"
-                            android:textColor="@color/on_primary"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                            android:layout_marginStart="@dimen/dimen_stack_md"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:gravity="center"
-                            android:text="@string/cta_inspeksi_sub"
-                            android:textColor="@color/on_primary"
-                            android:textSize="11sp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/start_inspection"
+                                android:textAppearance="@style/TextAppearance.RumahSehat.Title.Large"
+                                android:textColor="@color/on_primary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/dimen_stack_sm"
+                                android:text="@string/cta_inspeksi_sub"
+                                android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+                                android:textColor="@color/on_primary_container" />
+                        </LinearLayout>
                     </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
 
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/btnViewHistory"
-                    style="@style/Widget.RumahSehat.Card"
-                    android:layout_width="0dp"
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:layout_gravity="bottom|end"
+                        android:alpha="0.12"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/on_primary" />
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- CTA: Lihat Riwayat (full-width, neutral) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnViewHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dimen_stack_md"
+                android:background="@drawable/bg_cta_riwayat"
+                android:foreground="@drawable/bg_ripple"
+                app:cardBackgroundColor="@color/surface_low">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_cta_riwayat"
-                    android:foreground="?attr/selectableItemBackground">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="16dp">
+                    <FrameLayout
+                        android:layout_width="@dimen/dimen_cta_badge"
+                        android:layout_height="@dimen/dimen_cta_badge"
+                        android:background="@drawable/bg_id_pill">
 
                         <ImageView
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
                             android:contentDescription="@null"
                             android:src="@drawable/ic_history"
                             app:tint="@color/forest_green" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/dimen_stack_md"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:gravity="center"
                             android:text="@string/cta_history"
-                            android:textColor="@color/on_surface"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                            android:textAppearance="@style/TextAppearance.RumahSehat.Title.Large"
+                            android:textColor="@color/on_surface" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:gravity="center"
+                            android:layout_marginTop="@dimen/dimen_stack_sm"
                             android:text="@string/cta_history_sub"
-                            android:textColor="@color/on_surface_variant"
-                            android:textSize="11sp" />
+                            android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+                            android:textColor="@color/on_surface_variant" />
                     </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Ringkasan Hari Ini -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="@dimen/dimen_stack_lg"
                 android:text="@string/today_title"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.RumahSehat.Title.Medium"
+                android:textColor="@color/on_surface" />
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.RumahSehat.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="@dimen/dimen_stack_sm">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="@dimen/dimen_stack_lg">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -249,15 +278,16 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/dimen_stack_sm"
                             android:text="@string/today_completed"
-                            android:textColor="@color/on_surface_variant"
-                            android:textSize="13sp" />
+                            android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+                            android:textColor="@color/on_surface_variant" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="1dp"
                         android:layout_height="match_parent"
-                        android:layout_marginHorizontal="16dp"
+                        android:layout_marginHorizontal="@dimen/dimen_stack_lg"
                         android:background="@color/outline_variant" />
 
                     <LinearLayout
@@ -278,9 +308,10 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/dimen_stack_sm"
                             android:text="@string/today_pending"
-                            android:textColor="@color/on_surface_variant"
-                            android:textSize="13sp" />
+                            android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+                            android:textColor="@color/on_surface_variant" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -289,29 +320,39 @@
                 android:id="@+id/tvHistoryTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="@dimen/dimen_stack_lg"
                 android:text="@string/history_title"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.RumahSehat.Title.Medium"
+                android:textColor="@color/on_surface" />
 
             <TextView
                 android:id="@+id/tvEmpty"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/dimen_stack_md"
                 android:text="@string/history_empty"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+                android:textColor="@color/on_surface_variant" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvAssessments"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/dimen_stack_sm"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="false" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavTabs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface_lowest"
+        app:elevation="8dp"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav" />
+
+</LinearLayout>

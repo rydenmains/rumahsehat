@@ -17,7 +17,7 @@ import java.net.URL
  */
 object AssessmentSync {
     const val SERVER_URL =
-        "https://script.google.com/macros/s/AKfycbwUGE48x5wwJB5BnQEmMrlW7dCWxg8ZBJrpBtXi8bsQy8uiDqMgmZ7lzUB3M86NcPB4Mg/exec"
+        "https://script.google.com/macros/s/AKfycbzgu7bWA9KHzRNDkYf1i8ZQBRSR9lchTnHOx34FmAa73YYR7CD5keHQ_mqEnqB4RecXjQ/exec"
 
     suspend fun push(dao: AssessmentDao, assessment: Assessment, items: List<ScoreItem>): Boolean =
         withContext(Dispatchers.IO) {
@@ -27,22 +27,34 @@ object AssessmentSync {
             // Apps Script balas 302 ke googleusercontent; ikuti redirect dengan
             // GET (auto oleh HttpURLConnection) agar dapat 2xx. JANGAN re-POST:
             // payload jadi duplikat & status tertahan PENDING walau data sudah masuk.
+            // Catatan: ContentService GAS selalu HTTP 200, jadi keberhasilan
+            // ditentukan dari body JSON (status == "SUCCESS"), bukan hanya kode HTTP.
             val synced = try {
                 val conn = URL(SERVER_URL).openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.instanceFollowRedirects = true
-                conn.connectTimeout = 15_000
-                conn.readTimeout = 15_000
+                conn.connectTimeout = 60_000
+                conn.readTimeout = 60_000
                 conn.setRequestProperty("Content-Type", "text/plain;charset=UTF-8")
                 conn.doOutput = true
                 conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
-                val synced = conn.responseCode in 200..299
+                val synced = if (conn.responseCode in 200..299) {
+                    val responseBody = runCatching {
+                        conn.inputStream.bufferedReader().use { it.readText() }
+                    }.getOrDefault("")
+                    try {
+                        JSONObject(responseBody).optString("status") == "SUCCESS"
+                    } catch (_: Exception) {
+                        false
+                    }
+                } else false
                 conn.disconnect()
                 synced
             } catch (_: Exception) {
                 false
             }
 
+            // Gagal = jangan sentuh DB; status tetap PENDING dan dicoba ulang SyncWorker.
             if (synced) dao.updateSyncStatus(assessment.id, "SYNCED")
             synced
         }
@@ -76,11 +88,11 @@ object AssessmentSync {
         }.toMap()
     }
 
-    /** Resize/compress foto ke ≤1024px & JPEG ≥80% sebelum dikirim (2.7). */
+    /** Resize/compress foto ke ≤1080px & JPEG ≤500KB sebelum dikirim. */
     private fun compressPhoto(file: java.io.File): ByteArray = try {
         val bitmap = android.graphics.BitmapFactory.decodeFile(file.absolutePath)
             ?: return file.readBytes()
-        val maxDim = 1024
+        val maxDim = 1080
         val scale = Math.min(1f, maxDim.toFloat() / Math.max(bitmap.width, bitmap.height))
         val scaled = android.graphics.Bitmap.createScaledBitmap(
             bitmap,
@@ -89,9 +101,20 @@ object AssessmentSync {
             true
         )
         if (scaled !== bitmap) bitmap.recycle()
+        val maxSizeBytes = 500 * 1024
+        var quality = 80
         val out = java.io.ByteArrayOutputStream()
-        scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, out)
-        out.toByteArray()
+        scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, quality, out)
+        var bytes = out.toByteArray()
+        var currentQuality = quality
+        // Turunkan kualitas bertahap sampai ≤500KB sebelum dikirim.
+        while (bytes.size > maxSizeBytes && currentQuality > 40) {
+            out.reset()
+            currentQuality -= 10
+            scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, currentQuality, out)
+            bytes = out.toByteArray()
+        }
+        bytes
     } catch (_: Exception) {
         file.readBytes()
     }
