@@ -42,11 +42,10 @@ Goal: data langsung disimpan di Sheet, AI diproses BELAKANGAN (deferred) karena 
 ### Instant Fixes (Done/Status)
 - ✅ **Least-privilege permissions**: manifest hanya `INTERNET` + fitur kamera (tak ada `READ/WRITE_EXTERNAL_STORAGE`/`CAMERA` — kamera via `TakePicture` intent). Komentar kebijakan ditambahkan di `AndroidManifest.xml`.
 - ✅ **APK sudah ditandatangani** key produksi (CN=Rumah Sehat, SHA-256 b41424150…) + `checksums.txt` (SHA256 `77a6ddd9…`) di repo & tag `v1.2.0`.
-- ⏳ **GitHub Release**: butuh PAT (`repo` scope) → `.\scripts\release.ps1 -Token <PAT>` atau buat manual di web (tag v1.2.0 sudah ada).
-- ⏳ **Firebase App Distribution**: butuh aksi manual user (buat proyek Firebase + `firebase login`) →
+- ✅ **GitHub Release**: dibuat via API (kredensial git tersimpan). https://github.com/rydenmains/rumahsehat/releases/tag/v1.2.0 — asset `RumahSehat-User.apk` + `checksums.txt`.
+- ✅ **Firebase App Distribution**: release `1.2.0-user (3)` terkirim ke tester `rhayden2127@gmail.com`. CLI 15.26.0 terpasang. App ID `1:64669143349:android:e524726141db2e0d5afc7c`. Tanpa SDK/google-services (tidak perlu utk distribusi).
   ```bash
-  npm i -g firebase-tools && firebase login
-  firebase appdistribution:distribute RumahSehat-User.apk --app <APP_ID> --groups testers
+  firebase appdistribution:distribute RumahSehat-User.apk --app 1:64669143349:android:e524726141db2e0d5afc7c --testers rhayden2127@gmail.com
   ```
 
 ### F-Droid — Dua Jalur (file siap: `fdroiddata/com.rumahsehat.yml`)
