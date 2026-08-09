@@ -24,8 +24,38 @@ Unduh APK terbaru di **Release** GitHub, atau langsung dari `RumahSehat-User.apk
 
 | Versi | Tanggal | Catatan |
 |---|---|---|
+| **v1.2.0** | 2026-08-09 | Security hardening: token API dipindah dari source ke konfigurasi lokal, endpoint baca data (`?action=data`) dikunci token, foto Drive privat (tanpa link publik), signing release opsional untuk CI/F-Droid |
 | **v1.1.0** | 2026-08-08 | R8 obfuscation aktif; fix sync redirect Apps Script (tiada PENDING palsu); pembersihan kredensial & kode admin |
 | **v1.0.0** | 2026-08-08 | Rilis pertama: 17 indikator, 3 foto/penilaian, sinkron Google Sheets |
+
+---
+
+## Download & Install
+
+### Opsi 1: APK langsung (GitHub)
+
+1. Unduh `RumahSehat-User-signed.apk` dari [Releases](../../releases).
+2. Verifikasi hash SHA256 dengan `checksums.txt` di release yang sama:
+   ```powershell
+   Get-FileHash -Algorithm SHA256 RumahSehat-User-signed.apk
+   ```
+3. Aktifkan "Izinkan instalasi dari sumber tidak dikenal" untuk browser Anda.
+4. Pasang.
+
+> **Kenapa Chrome memperingatkan?** Aplikasi ini tidak ada di Google Play — peringatan standar untuk semua APK sideload. Keaslian APK diverifikasi lewat hash SHA256 di atas.
+
+### Opsi 2: F-Droid (dalam proses)
+
+Segera tersedia di repositori F-Droid (toko aplikasi open source, build dari source).
+
+### Opsi 3: Firebase App Distribution (untuk tester)
+
+Tambahkan tester lewat invite link Firebase, distribusi via CLI:
+```bash
+npm i -g firebase-tools
+firebase login
+firebase appdistribution:distribute app\build\outputs\apk\user\release\*.apk --app <APP_ID> --groups testers
+```
 
 ---
 
