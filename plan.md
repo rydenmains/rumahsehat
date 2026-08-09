@@ -37,6 +37,29 @@ Goal: data langsung disimpan di Sheet, AI diproses BELAKANGAN (deferred) karena 
 3. Jalankan sekali `createAiTrigger()` di Apps Script (trigger tiap 10 menit → `processPendingAi()`).
 4. Rebuild & reinstall APK (`./gradlew assembleUserRelease`).
 
+## Phase 3: DISTRIBUSI & RELEASE (v1.2.0)
+
+### Instant Fixes (Done/Status)
+- ✅ **Least-privilege permissions**: manifest hanya `INTERNET` + fitur kamera (tak ada `READ/WRITE_EXTERNAL_STORAGE`/`CAMERA` — kamera via `TakePicture` intent). Komentar kebijakan ditambahkan di `AndroidManifest.xml`.
+- ✅ **APK sudah ditandatangani** key produksi (CN=Rumah Sehat, SHA-256 b41424150…) + `checksums.txt` (SHA256 `77a6ddd9…`) di repo & tag `v1.2.0`.
+- ⏳ **GitHub Release**: butuh PAT (`repo` scope) → `.\scripts\release.ps1 -Token <PAT>` atau buat manual di web (tag v1.2.0 sudah ada).
+- ⏳ **Firebase App Distribution**: butuh aksi manual user (buat proyek Firebase + `firebase login`) →
+  ```bash
+  npm i -g firebase-tools && firebase login
+  firebase appdistribution:distribute RumahSehat-User.apk --app <APP_ID> --groups testers
+  ```
+
+### F-Droid — Dua Jalur (file siap: `fdroiddata/com.rumahsehat.yml`)
+- **Jalur A (paling gampang)**: akun gitlab.com → `gitlab.com/fdroid/fdroiddata` → *Issues* → *New issue* minta penambahan app (tulis repo, lisensi MIT, versionCode 3, versionName 1.2.0-user, task `userRelease`). Maintainer yang mengisi.
+- **Jalur B (standar)**: fork `gitlab.com/fdroid/fdroiddata` → buat `metadata/com.rumahsehat.yml` (isi = `fdroiddata/com.rumahsehat.yml` di repo ini) → commit → push → Merge Request. Review ±1–2 minggu.
+- Catatan: build F-Droid tanpa `local.properties` → `API_TOKEN` kosong → sync ditolak backend. Perlu desain token publik/per-device bila mau F-Droid fungsional penuh.
+
+### Deployment v1.2.0 (manual, wajib setelah rilis)
+1. Tempel `backend/Code.gs` baru → **Deploy → Web App**.
+2. Script Properties → set **`API_TOKEN` = `4fde71466abbdefe609628c28d4f3196`** (sama dgn `local.properties`; tanpa ini semua sync ditolak).
+3. Simpan `OPENROUTER_API_KEY` (jangan dihapus).
+4. APK lama mengirim token lama → ditolak setelah redeploy. Sebar APK v1.2.0.
+
 ## ENGINEERING-PRINCIPLES.md (harus diingat)
 1. Blueprint dulu: baca `SPEC.md`/`README.md` sebelum generate kode.
 2. AI = tool (amplifier), bukan autopilot — task diputuskan manusia.
