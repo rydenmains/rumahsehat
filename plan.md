@@ -50,6 +50,7 @@ Goal: data langsung disimpan di Sheet, AI diproses BELAKANGAN (deferred) karena 
 - `build.js:14` hardcode `{tahap1,tahap2,tahap3}` → kontradiksi dgn prinsip "scalable".
 - Tidak ada tool pembanding `SPEC ↔ data.js` → drift copy tidak terdeteksi.
 - `formAction` post di `data.js` = API layer belum terpisah.
-- "security" disebut tapi tidak dijabarkan: token `rs_sehat_2026` masih hardcode di `Code.gs:17` & `AssessmentSync.kt:137`; Gemini key belum ada aturan penyimpanan.
+- "security" disebut tapi tidak dijabarkan: token `rs_sehat_2026` masih hardcode di `Code.gs` & `AssessmentSync.kt`; Gemini key belum ada aturan penyimpanan.
+  - ✅ (v1.2.0) Token API dipindah ke `local.properties`/env → `BuildConfig.API_TOKEN`; fallback `rs_sehat_2026` DIHAPUS dari `Code.gs`; endpoint `?action=data` kini wajib token; foto Drive privat (tanpa `ANYONE_WITH_LINK`).
 - Doc hanya mengikat project web, tidak backend Android/Code.gs.
 - 3 file referensi terpisah (DESAIN.md / SPEC.md / ENGINEERING-PRINCIPLES.md) → risk dua sumber kebenaran.

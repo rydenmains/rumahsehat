@@ -20,9 +20,8 @@ var CONFIG = {
   DRIVE_FOLDER_NAME: "Healthy Home Photos",
   CUSTOM_FOLDER_ID: "",
   // Token penulisan (dikirim app via payload.token). Dibaca dari Script Properties
-  // "API_TOKEN" sehingga tidak hardcoded di repo publik. Fallback = nilai lama
-  // hanya agar deployment yang sudah jalan tetap bekerja.
-  API_TOKEN: PropertiesService.getScriptProperties().getProperty("API_TOKEN") || "rs_sehat_2026",
+  // "API_TOKEN" — TIDAK ada fallback hardcoded. Jika kosong, semua tulis/baca ditolak.
+  API_TOKEN: PropertiesService.getScriptProperties().getProperty("API_TOKEN") || "",
   // Model visi GRATIS via OpenRouter (suffix :free = $0, tanpa kartu kredit).
   // Kuota: 50 request/hari (naik ke 1000 jika akun pernah isi kredit $10 sekali).
   // Terverifikasi support foto. Ganti ke model berbayar (mis. google/gemini-2.5-flash) hanya jika saldo ada.
@@ -44,6 +43,12 @@ function getGeminiKey() {
 function doGet(e) {
   var action = e && e.parameter && e.parameter.action;
   if (action && action.toLowerCase() === "data") {
+    // Endpoint baca data TIDAK publik: butuh token yang sama dengan API_TOKEN
+    // (dikirim sebagai query param ?action=data&token=...).
+    var t = (e && e.parameter && e.parameter.token) || "";
+    if (t !== CONFIG.API_TOKEN) {
+      return createJsonResponse({ status: "FORBIDDEN", message: "Token tidak valid." }, 403);
+    }
     return readDataResponse();
   }
   return createJsonResponse({
@@ -116,7 +121,8 @@ function doPost(e) {
           var fileName = (payload.assessment_id || "ASM_" + new Date().getTime()) + "_" + sectionKeys[k] + ".jpg";
           var blob = Utilities.newBlob(decodedImage, "image/jpeg", fileName);
           var file = folder.createFile(blob);
-          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          // Privat (default Drive): foto HANYA terlihat pemilik spreadsheet.
+          // =IMAGE() tetap tampil untuk pemilik; tidak ada link publik yang bocor.
           var base = "https://lh3.googleusercontent.com/d/" + file.getId();
           photoUrls[k] = '=IMAGE("' + base + '")';
         } catch (e) {

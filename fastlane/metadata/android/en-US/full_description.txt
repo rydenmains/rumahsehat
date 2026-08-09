@@ -1,0 +1,9 @@
+RumahSehat is a field assessment tool for evaluating home health indicators including sanitation facilities and clean water access.
+
+Features:
+* 17 health indicators assessment
+* Offline-first with automatic sync
+* Photo documentation to Google Drive
+* Automatic Google Sheets reporting
+
+Designed for public health workers and environmental health officers.

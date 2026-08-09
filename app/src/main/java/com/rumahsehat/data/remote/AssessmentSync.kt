@@ -1,5 +1,6 @@
 ﻿package com.rumahsehat.data.remote
 
+import com.rumahsehat.BuildConfig
 import com.rumahsehat.data.dao.AssessmentDao
 import com.rumahsehat.data.model.Assessment
 import com.rumahsehat.data.model.FormItemsProvider
@@ -107,7 +108,7 @@ object AssessmentSync {
         // Bentuk payload sesuai skema backend Google Apps Script (Code.gs).
         put("assessment_id", assessment.id)
         put("notes", items.firstNotNullOfOrNull { it.reason } ?: "")
-        put("token", "rs_sehat_2026")
+        put("token", BuildConfig.API_TOKEN)
 
         put("meta", JSONObject().apply {
             put("assessor_name", assessment.assessorId)

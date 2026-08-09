@@ -160,11 +160,11 @@ Data model `Assessment`:
 Hal yang perlu dicek sebelum release berikutnya:
 
 - **Kode admin referensi tak ada**: `BuildConfig.FLAVOR == "admin"` di `ReviewActivity` & `AssessmentAdapter(showStatus)` — hanya flavor `user` ada di `build.gradle.kts`. Status SEHAT/TIDAK SEHAT tidak pernah tampil di mana pun di APK user.
-- **Token hardcoded**: `API_TOKEN` di `backend/Code.gs` dan `token` di `AssessmentSync.buildPayload` sama (`rs_sehat_2026`) dan tertulis di sumber. Aman sebelum release publik, harus dipindah ke konfigurasi/env.
-- **Kredensial keystore di build file**: `storePassword` dan `keyPassword` hardcoded `rumahsehat2026` di `app/build.gradle.kts`. Sebaiknya dari env `RS_KEYSTORE_PASSWORD`.
+- **Token hardcoded**: ~~`API_TOKEN` di `backend/Code.gs` dan `token` di `AssessmentSync.buildPayload` sama (`rs_sehat_2026`)~~ → ✅ v1.2.0: token dari `BuildConfig.API_TOKEN` (isi `local.properties`/env `RS_API_TOKEN`), fallback dihapus dari `Code.gs`.
+- **Kredensial keystore di build file**: ~~`storePassword` dan `keyPassword` hardcoded `rumahsehat2026` di `app/build.gradle.kts`~~ → ✅ sudah dari env `RS_KEYSTORE_PASSWORD`/`keystore.password` di `local.properties`; tanpa password, build release memakai debug key (aman untuk CI/F-Droid).
 - **State form tidak bertahan restart**: `currentScore` pada `FormItem` dimutasi di memory; kalau Activity di-recreate (rotasi/batalkan proses) di tengah isian, jawaban hilang.
 - **Foto hanya di memory**: `photoPaths` di ViewModel tidak dipersist; hilang saat Activity di-recreate sebelum Simpan.
-- **Endpoint GET publik**: `fetchCloudAssessments` memakai `?action=data` tanpa token → seluruh baris spreadsheet terbaca siapa pun yang tahu URL endpoint.
+- **Endpoint GET publik**: ~~`fetchCloudAssessments` memakai `?action=data` tanpa token → seluruh baris spreadsheet terbaca siapa pun yang tahu URL endpoint.~~ → ✅ v1.2.0: `doGet` wajib `?token=` sama dengan `API_TOKEN`.
 
 ---
 

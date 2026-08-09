@@ -11,6 +11,14 @@ val localProps = Properties().apply {
     if (f.exists()) f.inputStream().use { load(it) }
 }
 
+// Kredensial diambil dari ENV / local.properties (keduanya tidak masuk git).
+// Tanpa password, release build tetap jalan dengan debug key (untuk CI/F-Droid).
+val keystorePassword = System.getenv("RS_KEYSTORE_PASSWORD")
+    ?: localProps.getProperty("keystore.password")
+val apiToken = System.getenv("RS_API_TOKEN")
+    ?: localProps.getProperty("api.token")
+    ?: "".also { println("WARNING: RS_API_TOKEN/api.token kosong — sinkronisasi backend akan ditolak.") }
+
 android {
     namespace = "com.rumahsehat"
     compileSdk = 35
@@ -19,25 +27,23 @@ android {
         applicationId = "com.rumahsehat"
         minSdk = 23
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
         }
+
+        buildConfigField("String", "API_TOKEN", "\"$apiToken\"")
     }
 
     signingConfigs {
         create("release") {
             storeFile = file("../rumahsehat-upload.keystore")
-            // Password dibaca dari ENV atau local.properties (keduanya tidak masuk git).
-            val password = System.getenv("RS_KEYSTORE_PASSWORD")
-                ?: localProps["keystore.password"] as String?
-                ?: throw GradleException("Set RS_KEYSTORE_PASSWORD atau keystore.password di local.properties")
-            storePassword = password
+            storePassword = keystorePassword
             keyAlias = "rumahsehat"
-            keyPassword = password
+            keyPassword = keystorePassword
         }
     }
 
@@ -45,7 +51,9 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            if (keystorePassword != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
