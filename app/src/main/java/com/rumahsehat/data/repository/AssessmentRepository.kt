@@ -22,9 +22,17 @@ class AssessmentRepository(private val assessmentDao: AssessmentDao) {
         return assessmentDao.getScoreItemsForAssessment(assessmentId)
     }
 
-    suspend fun syncPending() {
+    /** Kirim semua data pending. Kembalikan (berhasil, gagal). */
+    suspend fun syncPending(): Pair<Int, Int> {
+        var sent = 0
+        var failed = 0
         for (a in assessmentDao.getPendingAssessments()) {
-            AssessmentSync.push(assessmentDao, a, assessmentDao.getScoreItemsForAssessment(a.id))
+            if (AssessmentSync.push(assessmentDao, a, assessmentDao.getScoreItemsForAssessment(a.id))) {
+                sent++
+            } else {
+                failed++
+            }
         }
+        return sent to failed
     }
 }
