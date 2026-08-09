@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Kebijakan izin MINIMAL (least privilege):
+         - READ/WRITE_EXTERNAL_STORAGE & CAMERA TIDAK dipakai (kamera via
+           ActivityResultContracts.TakePicture = intent eksternal, tanpa izin).
+         - Cukup INTERNET + fitur kamera opsional. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
