@@ -38,6 +38,31 @@ function getGeminiKey() {
 }
 
 // ---------------------------------------------------------------------------
+// Setup sekali (jalankan manual di editor Apps Script)
+// ---------------------------------------------------------------------------
+
+/**
+ * Set token penulisan backend. NILAINYA WAJIB SAMA dengan BuildConfig.API_TOKEN
+ * di app Android (isi local.properties / env RS_API_TOKEN), kalau beda maka
+ * semua request app ditolak (FORBIDDEN) dan data tidak pernah masuk.
+ * Jalankan sekali di editor:  Tools > Execute function > setApiToken
+ */
+function setApiToken(token) {
+  if (!token) throw new Error("Parameter token kosong.");
+  PropertiesService.getScriptProperties().setProperty("API_TOKEN", token);
+  Logger.log("API_TOKEN diset: " + token.substring(0, 4) + "…");
+}
+
+/** Cek konfigurasi: apakah API_TOKEN sudah ter-set. Jalankan untuk verifikasi. */
+function verifyConfig() {
+  var t = PropertiesService.getScriptProperties().getProperty("API_TOKEN");
+  var k = PropertiesService.getScriptProperties().getProperty("OPENROUTER_API_KEY");
+  Logger.log("API_TOKEN ter-set: " + !!t + (t ? " (panjang " + t.length + ")" : ""));
+  Logger.log("OPENROUTER_API_KEY ter-set: " + !!k);
+  return { api_token_set: !!t, openrouter_key_set: !!k };
+}
+
+// ---------------------------------------------------------------------------
 // doGet — endpoint baca data
 // ---------------------------------------------------------------------------
 function doGet(e) {

@@ -150,7 +150,7 @@ Data model `Assessment`:
 `app/build.gradle.kts`:
 - minSdk 23, targetSdk 35, compileSdk 35, Flavor `user` (`applicationIdSuffix ..user`).
 - Signing release dari keystore `../rumahsehat-upload.keystore` (password di `GRADLE_PROP` seharusnya bukan plaintext — lihat nilai). Note: **storePassword fallback "rumahsehat2026" di kode** — hardening perlu.
-- Release: minify+shrink aktif.
+- Release: minify+shrink NONAKTIF (`isMinifyEnabled=false`, sejak v1.3.0).
 - `resValue("string","app_name","Rumah Sehat")` diterapkan ke semua variant.
 
 ---

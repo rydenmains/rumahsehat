@@ -31,6 +31,7 @@
     <string name="history_title">Penilaian Tersimpan</string>
     <string name="sync_banner_title">Status Sinkronisasi</string>
     <string name="sync_now">Kirim Sekarang</string>
+    <string name="sync_in_progress">Menyinkronkan…</string>
     <string name="cta_inspeksi_sub">17 indikator + 3 foto</string>
     <string name="cta_history">Lihat Riwayat</string>
     <string name="cta_history_sub">Rekap penilaian terdahulu</string>

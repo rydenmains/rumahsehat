@@ -51,88 +51,22 @@
     <div class="logo"><img src="logo.png" alt="Rumah Sehat" /></div>
     <div>
       <h1>Penilaian Saya</h1>
-      <p>Rumah Sehat · riwayat penilaian pribadi</p>
+      <p>Rumah Sehat · informasi aplikasi</p>
     </div>
   </header>
 
-  <section class="card" id="loginCard">
-    <label for="name">Nama kamu (sesuai saat menilai)</label>
-    <input id="name" type="text" placeholder="contoh: Andi" autocomplete="off" />
-    <div class="hint">Hanya penilaian atas nama ini yang ditampilkan.</div>
-    <button id="btnLogin" style="margin-top:12px">Lihat Penilaian Saya</button>
+  <section class="card">
+    <label>Informasi Aplikasi</label>
+    <p class="hint" style="line-height:1.6;color:var(--ink);font-size:14px">
+      Rumah Sehat dipakai petugas lapangan untuk menilai 17 indikator kesehatan
+      lingkungan rumah: komponen rumah, sarana sanitasi, dan perilaku penghuni.
+      Setiap penilaian menyertakan 3 foto. Data tersimpan otomatis dan bisa
+      disinkronkan meski jaringan tidak stabil.
+    </p>
     <a id="dlApk" class="btn" href="index.html" style="display:block;margin-top:12px">⬇ Unduh Aplikasi Rumah Sehat</a>
   </section>
 
-  <section id="rows"></section>
-  <div class="empty" id="empty" style="display:none">Belum ada penilaian atas nama ini.</div>
-  <footer><b>Rumah Sehat</b> · data dari Google Sheet</footer>
+  <footer><b>Rumah Sehat</b> · aplikasi penilaian kesehatan lingkungan</footer>
 </div>
-
-<script>
-const ENDPOINT = "https://script.google.com/macros/s/AKfycbxWtEzcBaHI7MeMH_fdgV-6FkhI1QLDmlt7HAFRnokuon3wPo1kewXQPASK0nvHJp7ATQ/exec?action=data";
-const NAME_KEY = "rs_user_name";
-const $ = id => document.getElementById(id);
-
-let allRows = [];
-
-function statusOf(r){
-  const raw = String(r["Status Health"]||"").toUpperCase();
-  if(raw.includes("TIDAK")) return "TIDAK SEHAT";
-  if(raw.includes("SEHAT")) return "SEHAT";
-  return "Menunggu";
-}
-
-function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-
-async function load(){
-  try{
-    const res = await fetch(ENDPOINT, {cache:"no-store"});
-    const json = await res.json();
-    allRows = json.rows || [];
-    render();
-  }catch(err){
-    $("empty").style.display="block";
-    $("empty").textContent = "Gagal mengambil data. Cek koneksi / URL endpoint.";
-  }
-}
-
-function myName(){ return ($("name").value.trim() || "").toLowerCase(); }
-
-function render(){
-  const name = myName();
-  const list = allRows.filter(r => String(r["Assessor"]||"").trim().toLowerCase() === name)
-                      .sort((a,b)=> String(b["Tanggal Sync"]||"").localeCompare(String(a["Tanggal Sync"]||"")));
-  const wrap = $("rows");
-  wrap.innerHTML = "";
-  $("empty").style.display = list.length ? "none" : "block";
-  $("empty").textContent = list.length ? "" : "Belum ada penilaian atas nama ini.";
-  for(const r of list){
-    const st = statusOf(r);
-    const div = document.createElement("div");
-    div.className = "item";
-    const thumb = String(r["Preview Foto"]||"").match(/IMAGE\("([^"]+)"\)/) || String(r["URL Foto"]||"").match(/https[^\s"]+/);
-    div.innerHTML = `
-      <div class="top">
-        <div><div class="comp">${esc(r["Perusahaan / Kebun"])}</div>
-        <div class="meta">${esc(r["Tanggal Sync"])}</div></div>
-        <span class="chip ${st==="SEHAT"?"ok":"bad"}">${esc(st)}</span>
-      </div>
-      <div class="score">Skor: <b>${esc(r["Total Skor"])}</b></div>
-      ${r["Catatan Field"] && r["Catatan Field"]!=="-" ? `<div class="notes">${esc(r["Catatan Field"])}</div>` : ""}
-      ${thumb ? `<img src="${thumb[1]}" loading="lazy" style="width:56px;height:56px;object-fit:cover;border-radius:10px;margin-top:10px" onerror="this.style.display='none'"/>` : ""}`;
-    wrap.appendChild(div);
-  }
-}
-
-$("btnLogin").addEventListener("click", ()=>{
-  localStorage.setItem(NAME_KEY, $("name").value);
-  render();
-});
-$("name").addEventListener("keydown", e=>{ if(e.key==="Enter") render(); });
-
-const saved = localStorage.getItem(NAME_KEY);
-if(saved){ $("name").value = saved; }
-load();
-</script>
 </body>
 </html>

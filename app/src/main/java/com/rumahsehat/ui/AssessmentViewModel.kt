@@ -66,9 +66,21 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    private val _isSyncing = MutableLiveData(false)
+    val isSyncing: LiveData<Boolean> get() = _isSyncing
+
+    private val _syncMessage = MutableLiveData<String?>()
+    val syncMessage: LiveData<String?> get() = _syncMessage
+
     fun syncNow() {
+        if (_isSyncing.value == true) return // cegah klik ganda
         viewModelScope.launch {
-            repository.syncPending()
+            _isSyncing.value = true
+            val (sent, failed) = repository.syncPending()
+            _isSyncing.value = false
+            _syncMessage.value =
+                if (failed == 0) "Sinkronisasi selesai. $sent data terkirim."
+                else "Selesai: $sent terkirim, $failed gagal. Akan dicoba otomatis."
         }
     }
 

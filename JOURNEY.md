@@ -13,7 +13,7 @@
 | Fitur inti | 17 indikator, 3 foto, offline-first, sinkron Google Sheets/Drive |
 | Backend | Google Apps Script (`backend/Code.gs`) → Sheet "Data Assessment" + Drive |
 | Landing web | `index.html` (unduh APK) + `backend/user.html` (penilaian saya) |
-| Rilis | v1.1.0 (2026-08-08), APK root + GitHub Release, R8 obfuscated (3.2 MB) |
+| Rilis | v1.3.1 (2026-08-10), APK root + GitHub Release, tanpa obfuscation |
 | Desain | Design system "Eco-Systemic Professional" (teal #005048, Inter) — sudah di-harmonize via Stitch |
 | Hal yang belum rapi | 3 catatan hardening di §5 (token, state form, foto) |
 
