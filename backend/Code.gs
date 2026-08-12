@@ -219,38 +219,38 @@ function doPost(e) {
     var meta = payload.meta || {};
 
     var newRow = [
-      payload.assessment_id || "-",
+      safeCell(payload.assessment_id || "-"),
       formattedDate,
-      meta.assessor_name || payload.assessor_name || "-",
-      meta.company || payload.company || "-",
+      safeCell(meta.assessor_name || payload.assessor_name || "-"),
+      safeCell(meta.company || payload.company || "-"),
 
       // I. KOMPONEN RUMAH (8 Items) — jawaban kata
-      a.langit_langit !== undefined ? a.langit_langit : "-",
-      a.dinding !== undefined ? a.dinding : "-",
-      a.lantai !== undefined ? a.lantai : "-",
-      a.jendela_kamar !== undefined ? a.jendela_kamar : "-",
-      a.jendela_rk !== undefined ? a.jendela_rk : "-",
-      a.ventilasi !== undefined ? a.ventilasi : "-",
-      a.lubang_asap !== undefined ? a.lubang_asap : "-",
-      a.pencahayaan !== undefined ? a.pencahayaan : "-",
+      safeCell(a.langit_langit !== undefined ? a.langit_langit : "-"),
+      safeCell(a.dinding !== undefined ? a.dinding : "-"),
+      safeCell(a.lantai !== undefined ? a.lantai : "-"),
+      safeCell(a.jendela_kamar !== undefined ? a.jendela_kamar : "-"),
+      safeCell(a.jendela_rk !== undefined ? a.jendela_rk : "-"),
+      safeCell(a.ventilasi !== undefined ? a.ventilasi : "-"),
+      safeCell(a.lubang_asap !== undefined ? a.lubang_asap : "-"),
+      safeCell(a.pencahayaan !== undefined ? a.pencahayaan : "-"),
 
       // II. SARANA SANITASI (4 Items)
-      a.air_bersih !== undefined ? a.air_bersih : "-",
-      a.jamban !== undefined ? a.jamban : "-",
-      a.spal !== undefined ? a.spal : "-",
-      a.tempat_sampah !== undefined ? a.tempat_sampah : "-",
+      safeCell(a.air_bersih !== undefined ? a.air_bersih : "-"),
+      safeCell(a.jamban !== undefined ? a.jamban : "-"),
+      safeCell(a.spal !== undefined ? a.spal : "-"),
+      safeCell(a.tempat_sampah !== undefined ? a.tempat_sampah : "-"),
 
       // III. PERILAKU PENGHUNI (5 Items)
-      a.buka_jendela_kamar !== undefined ? a.buka_jendela_kamar : "-",
-      a.buka_jendela_rk !== undefined ? a.buka_jendela_rk : "-",
-      a.bersih_rumah !== undefined ? a.bersih_rumah : "-",
-      a.buang_tinja_bayi !== undefined ? a.buang_tinja_bayi : "-",
-      a.buang_sampah !== undefined ? a.buang_sampah : "-",
+      safeCell(a.buka_jendela_kamar !== undefined ? a.buka_jendela_kamar : "-"),
+      safeCell(a.buka_jendela_rk !== undefined ? a.buka_jendela_rk : "-"),
+      safeCell(a.bersih_rumah !== undefined ? a.bersih_rumah : "-"),
+      safeCell(a.buang_tinja_bayi !== undefined ? a.buang_tinja_bayi : "-"),
+      safeCell(a.buang_sampah !== undefined ? a.buang_sampah : "-"),
 
       // RINGKASAN & FOTO
-      summary.total_achieved !== undefined ? summary.total_achieved : "",
-      summary.status || (summary.is_healthy ? "SEHAT" : "TIDAK SEHAT"),
-      payload.notes || "-",
+      safeCell(summary.total_achieved !== undefined ? summary.total_achieved : ""),
+      safeCell(summary.status || (summary.is_healthy ? "SEHAT" : "TIDAK SEHAT")),
+      safeCell(payload.notes || "-"),
       photoUrls[0], photoUrls[1], photoUrls[2],
 
       // ANALISIS AI (2 kolom) — diisi belakangan oleh processPendingAi()
@@ -597,6 +597,17 @@ function allowRequest() {
     // Bila cache gagal (jarang), jangan blokir alur utama.
     return true;
   }
+}
+
+/**
+ * Sanitasi sel sebelum ditulis ke Spreadsheet: nilai user yang diawali
+ * '=', '+', '-', '@' diubah jadi teks biasa (prefix apostrof) supaya tidak
+ * diinterpretasikan sebagai formula oleh Sheets (spreadsheet injection).
+ */
+function safeCell(value) {
+  var s = String(value == null ? "" : value);
+  if (/^[=+\-@]/.test(s)) return "'" + s;
+  return s;
 }
 
 function getOrCreateFolder() {
