@@ -11,7 +11,7 @@
 .cxx
 local.properties
 
-/RumahSehat-Admin.apk
+*.apk
 /rumahsehat-upload.keystore
 /prototype/
 /nextplan.md
