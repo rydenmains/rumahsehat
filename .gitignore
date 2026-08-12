@@ -12,6 +12,12 @@
 local.properties
 
 /RumahSehat-Admin.apk
-
 /rumahsehat-upload.keystore
+/prototype/
+/nextplan.md
+
+# Planning docs — sengaja TIDAK di-commit (aturan proyek)
+planbackend.md
+/plan.md
+backend/plan.md
 

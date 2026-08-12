@@ -89,7 +89,7 @@ private fun ItemReviewBinding.bind(scoreItem: ScoreItem, itemsById: Map<String, 
     val formItem = itemsById[scoreItem.itemId]
     if (formItem != null) tvTitle.setText(formItem.titleRes) else tvTitle.text = scoreItem.itemId
     if (scoreItem.isApplicable) {
-        bindOptionLabel(tvLevel, formItem, scoreItem.score)
+        bindOptionLabel(tvLevel, formItem, scoreItem.score, scoreItem.optionIndex)
         tvLevel.setTextColor(root.context.getColor(R.color.forest_green))
     } else {
         tvLevel.setText(R.string.item_not_applicable)
@@ -98,10 +98,11 @@ private fun ItemReviewBinding.bind(scoreItem: ScoreItem, itemsById: Map<String, 
 }
 
 /** Tampilkan label opsi terpilih; skor numerik tersembunyi. */
-private fun bindOptionLabel(tv: TextView, formItem: FormItem?, score: Int) {
-    val option = formItem?.options?.firstOrNull {
-        formItem.scoreForOption(formItem.options.indexOf(it)) == score
-    }
+private fun bindOptionLabel(tv: TextView, formItem: FormItem?, score: Int, optionIndex: Int) {
+    val option = formItem?.options?.getOrNull(optionIndex)
+        ?: formItem?.options?.firstOrNull {
+            formItem.scoreForOption(formItem.options.indexOf(it)) == score
+        }
     if (option != null) {
         tv.text = "${option.letter}. ${option.label}"
     } else {

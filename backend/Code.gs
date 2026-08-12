@@ -27,7 +27,11 @@ var CONFIG = {
   // Terverifikasi support foto. Ganti ke model berbayar (mis. google/gemini-2.5-flash) hanya jika saldo ada.
   GEMINI_MODEL: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
   // Jumlah baris maksimum diproses per panggilan processPendingAi() (limit runtime).
-  AI_BATCH_SIZE: 5
+  AI_BATCH_SIZE: 5,
+  // Batas request tulis per menit (perlindungan kuota/serangan). 429 bila lewat.
+  RATE_LIMIT_PER_MINUTE: 200,
+  // Ukuran payload maksimum (foto terkompresi ~2MB; sisakan ruang). 413 bila lewat.
+  MAX_PAYLOAD_BYTES: 5 * 1024 * 1024
 };
 
 /** Key OpenRouter diambil dari Script Properties — JANGAN hardcode.
@@ -57,8 +61,9 @@ function setApiToken(token) {
 function verifyConfig() {
   var t = PropertiesService.getScriptProperties().getProperty("API_TOKEN");
   var k = PropertiesService.getScriptProperties().getProperty("OPENROUTER_API_KEY");
-  Logger.log("API_TOKEN ter-set: " + !!t + (t ? " (panjang " + t.length + ")" : ""));
-  Logger.log("OPENROUTER_API_KEY ter-set: " + !!k);
+  var msg = "API_TOKEN ter-set: " + !!t + (t ? " (panjang " + t.length + ")" : "") + " | OPENROUTER_API_KEY ter-set: " + !!k;
+  Logger.log(msg);
+  logToSheet("INFO", msg);
   return { api_token_set: !!t, openrouter_key_set: !!k };
 }
 
@@ -129,10 +134,22 @@ function doPost(e) {
       throw new Error("Payload request kosong atau tidak valid.");
     }
 
+    // Rate limiting: batasi permintaan tulis per menit (CacheService, anti serangan/kuota).
+    if (!allowRequest()) {
+      return createJsonResponse({ status: "ERROR", message: "Terlalu banyak permintaan, coba lagi nanti." }, 429);
+    }
+
+    // Batasan ukuran payload: tolak request raksasa sebelum diproses.
+    if (e.postData.contents.length > CONFIG.MAX_PAYLOAD_BYTES) {
+      logToSheet("WARN", "doPost ditolak: payload terlalu besar (" + e.postData.contents.length + " byte).");
+      return createJsonResponse({ status: "ERROR", message: "Payload terlalu besar." }, 413);
+    }
+
     var payload = JSON.parse(e.postData.contents);
 
     // Cek token penulisan: tolak request tanpa token yang benar.
     if (!payload.token || payload.token !== CONFIG.API_TOKEN) {
+      logToSheet("WARN", "doPost FORBIDDEN: token tidak valid dari app.");
       return createJsonResponse({ status: "FORBIDDEN", message: "Token tidak valid." }, 403);
     }
 
@@ -151,6 +168,7 @@ function doPost(e) {
       var strId = String(payload.assessment_id);
       for (var i = 0; i < existingRows.length; i++) {
         if (String(existingRows[i][0]) === strId) {
+          logToSheet("INFO", "Duplikat dilewati (idempotent): " + strId);
           return createJsonResponse({
             status: "SUCCESS",
             message: "Data sudah ada, dilewati (idempotent).",
@@ -180,11 +198,13 @@ function doPost(e) {
           var fileName = (payload.assessment_id || "ASM_" + new Date().getTime()) + "_" + sectionKeys[k] + ".jpg";
           var blob = Utilities.newBlob(decodedImage, "image/jpeg", fileName);
           var file = folder.createFile(blob);
-          // Izinkan siapa pun yang punya link untuk melihat foto.
-          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          // PRIVATE: hanya kepemilikan akun Google script (Dinas) yang bisa lihat.
+          // Petugas cukup upload; pratinjau link hanya untuk admin punya akses Drive.
+          file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.VIEW);
           // Simpan URL sebagai teks biasa yang bisa diklik, bukan rumus =IMAGE().
           photoUrls[k] = "https://drive.google.com/file/d/" + file.getId() + "/view";
         } catch (e) {
+          logToSheet("ERROR", "Foto gagal di-upload (" + sectionKeys[k] + "): " + e);
           // abaikan foto gagal; tetap simpan data
         }
       }
@@ -242,6 +262,8 @@ function doPost(e) {
     var lastRow = sheet.getLastRow();
     sheet.setRowHeight(lastRow, 80); // Tinggi baris untuk foto
 
+    logToSheet("INFO", "Data baru tersimpan: " + (payload.assessment_id || "tanpa-id") + " | " + formattedDate);
+
     return createJsonResponse({
       status: "SUCCESS",
       message: "Data berhasil disimpan!",
@@ -251,6 +273,7 @@ function doPost(e) {
 
   } catch (error) {
     // Semua error ditangkap rapi: balasan JSON status ERROR (tidak pernah response polos).
+    logToSheet("ERROR", "doPost gagal: " + error.toString());
     return createJsonResponse({
       status: "ERROR",
       message: error.toString()
@@ -276,6 +299,7 @@ function processPendingAi() {
 
   var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
   var colStatus = headers.indexOf("Status Validasi AI") + 1;
+  var colExplanation = headers.indexOf("Penjelasan AI") + 1;
   var colRecommendation = headers.indexOf("Rekomendasi AI") + 1;
   if (colStatus === 0 || colRecommendation === 0) return; // header AI belum ada
 
@@ -299,8 +323,8 @@ function processPendingAi() {
       if (!fileId) continue;
       try {
         var blob = DriveApp.getFileById(fileId).getBlob();
-        photos[photoCols[key].key] = Utilities.base64Encode(blob.getBytes(), Utilities.Charset.UTF_8);
-      } catch (e) { /* lewati satu foto gagal */ }
+        photos[photoCols[key].key] = Utilities.base64Encode(blob.getBytes());
+      } catch (e) { logToSheet("ERROR", "Foto gagal dibaca (" + photoCols[key].key + "): " + e); }
     }
 
     var result = analyzeAssessmentWithGemini(photos, {
@@ -311,7 +335,11 @@ function processPendingAi() {
     });
 
     sheet.getRange(r + 1, colStatus).setValue(result.flag);
+    if (result.explanation) {
+      if (colExplanation > 0) sheet.getRange(r + 1, colExplanation).setValue(result.explanation);
+    }
     sheet.getRange(r + 1, colRecommendation).setValue(result.recommendation);
+    logToSheet("INFO", "AI " + String(data[r][0]) + " -> " + result.flag + " | " + result.recommendation);
     processed++;
   }
 }
@@ -325,7 +353,35 @@ function createAiTrigger() {
 }
 
 /**
- * Analisis 3 foto + jawaban kata via Gemini.
+ * Buka segel baris yang pernah "Analisis AI dilewati" (fallback dari proses yang gagal)
+ * agar bisa dianalisis ulang. Jalankan SEKALI manual SETELAH men-deploy kode fix.
+ */
+function resetAiStatuses() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEET_NAME);
+  if (!sheet || sheet.getLastRow() < 2) return;
+
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
+  var colStatus = headers.indexOf("Status Validasi AI") + 1;
+  var colExplanation = headers.indexOf("Penjelasan AI") + 1;
+  var colRecommendation = headers.indexOf("Rekomendasi AI") + 1;
+  if (colStatus === 0 || colRecommendation === 0) return;
+
+  var data = sheet.getDataRange().getValues();
+  var resetCount = 0;
+  for (var r = 1; r < data.length; r++) {
+    var status = String(data[r][colStatus - 1] || "");
+    if (status.indexOf("Analisis AI dilewati") === -1) continue;
+    sheet.getRange(r + 1, colStatus).clearContent();
+    if (colExplanation > 0) sheet.getRange(r + 1, colExplanation).clearContent();
+    sheet.getRange(r + 1, colRecommendation).clearContent();
+    resetCount++;
+  }
+  Logger.log("resetAiStatuses: " + resetCount + " baris dibuka untuk diproses ulang.");
+  logToSheet("INFO", "resetAiStatuses: " + resetCount + " baris dibuka untuk diproses ulang.");
+}
+
+/**
+ * Analisis 3 foto + jawaban kata OpenRouter (model vision).
  * Gunakan SEMUA photo key (house_front, sanitation, kitchen_spal).
  * Output konsisten: { is_valid, flag, recommendation }.
  * Fallback bila key kosong / foto tak lengkap / request gagal → data tetap tersimpan.
@@ -370,8 +426,19 @@ function analyzeAssessmentWithGemini(photos, assessment) {
     "Status sementara: " + assessment.status + " (is_healthy=" + assessment.is_healthy + ").",
     "",
     "Nilai dari jawaban + foto: apakah rumah ini SEHAT?",
+    "PENTING - Lakukan langkah ini:",
+    "1. Analisis SETIAP foto satu per satu. Tulis apa yang benar-benar terlihat di foto",
+    "   (kondisi plafon, dinding, lantai, jendela, ventilasi, jamban, SPAL, tempat sampah).",
+    "   Bila foto buram / sudut tidak jelas / tidak menampilkan ruangan yang dimaksud,",
+    "   tuliskan jelas bahwa jenis foto tidak bisa dipastikan (mis. 'foto tidak jelas, tidak bisa dipastikan').",
+    "2. Gunakan jawaban petugas sebagai sumber utama; foto sebagai pendukung.",
+    "   Jangan menurunkan penilaian hanya karena foto buram bila jawaban petugas lengkap.",
+    "3. Putuskan flag akhir (SEHAT / TIDAK SEHAT / PERLU PERBAIKAN) dari gabungan kedua sumber.",
+    "",
     "Jawab JSON HANYA dengan format:",
-    '{ "is_valid": true/false, "flag": "SEHAT"|"TIDAK SEHAT"|"PERLU PERBAIKAN", "recommendation": "teks saran singkat (Indonesia, max 2 kalimat)" }',
+    '{ "is_valid": true/false, "flag": "SEHAT"|"TIDAK SEHAT"|"PERLU PERBAIKAN",',
+    '  "per_photo": ["deskripsi foto 1", "deskripsi foto 2", "deskripsi foto 3"],',
+    '  "recommendation": "rekomendasi singkat dalam 1-2 kalimat (Indonesia)" }',
     "Jika foto buram/tidak jelas, is_valid=false."
   ].join("\n");
 
@@ -380,12 +447,59 @@ function analyzeAssessmentWithGemini(photos, assessment) {
   var requestBody = {
     model: CONFIG.GEMINI_MODEL,
     messages: [{ role: "user", content: content }],
-    temperature: 0.2,
-    // Batasi token agar tidak melebihi saldo OpenRouter (bila tanpa ini, default 8k+ dan bisa 402).
-    max_tokens: 800,
-    response_format: { type: "json_object" }
+    temperature: 0, // deterministik: hindari flag berubah-ubah antar run
+    max_tokens: 800
   };
 
+  // JSON Mode bikin banyak model :free di-400 (param tidak didukung) → coba dulu, retry tanpa.
+  requestBody.response_format = { type: "json_object" };
+  var response = postToOpenRouter(apiKey, requestBody);
+  if (response === null) {
+    // 400 karena response_format tidak didukung → coba sekali lagi tanpa JSON Mode.
+    delete requestBody.response_format;
+    response = postToOpenRouter(apiKey, requestBody);
+  }
+  if (response === null) {
+    return fallback("Analisis AI dilewati", "Error OpenRouter: request gagal (lihat Execution log).");
+  }
+  if (response.error) {
+    return fallback("Analisis AI dilewati", "Error OpenRouter: " + response.error.message);
+  }
+  var text = response.choices && response.choices[0]
+    && response.choices[0].message && response.choices[0].message.content;
+  if (!text) {
+    return fallback("Analisis AI dilewati", "Respons OpenRouter kosong.");
+  }
+  var parsed = parseAiJson(text);
+  if (!parsed) {
+    Logger.log("JSON tidak ter-parse: " + String(text).substring(0, 300));
+    logToSheet("ERROR", "JSON tidak ter-parse: " + String(text).substring(0, 300));
+    return fallback("Analisis AI dilewati", "Respons AI bukan JSON valid: " + String(text).substring(0, 120));
+  }
+  var flag = String(parsed.flag || assessment.status || "SEHAT").toUpperCase();
+  var normalizedFlag = "PERLU PERBAIKAN";
+  if (flag.indexOf("TIDAK") !== -1) normalizedFlag = "TIDAK SEHAT";
+  else if (flag.indexOf("SEHAT") !== -1) normalizedFlag = "SEHAT";
+  var perPhoto = [];
+  if (Array.isArray(parsed.per_photo)) {
+    perPhoto = parsed.per_photo.map(function (p) { return String(p); });
+  }
+  var explanation = [
+    "Dasar penilaian (gabungan jawaban + foto):",
+    "Foto 1 (depan rumah): " + (perPhoto[0] || "-"),
+    "Foto 2 (sanitasi): " + (perPhoto[1] || "-"),
+    "Foto 3 (dapur/SPAL): " + (perPhoto[2] || "-")
+  ].join("\n");
+  return {
+    is_valid: !!parsed.is_valid,
+    flag: normalizedFlag,
+    explanation: explanation,
+    recommendation: String(parsed.recommendation || "-")
+  };
+}
+
+/** Kirim ke OpenRouter. Return parsed JSON body, atau null bila gagal/jaringan. */
+function postToOpenRouter(apiKey, requestBody) {
   try {
     var response = UrlFetchApp.fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "post",
@@ -393,26 +507,63 @@ function analyzeAssessmentWithGemini(photos, assessment) {
       contentType: "application/json",
       payload: JSON.stringify(requestBody),
       muteHttpExceptions: true,
-      timeoutSeconds: 45
+      timeoutSeconds: 60
     });
-    var result = JSON.parse(response.getContentText());
-    var text = result && result.choices && result.choices[0]
-      && result.choices[0].message && result.choices[0].message.content;
-    if (result.error) {
-      return fallback("Analisis AI dilewati", "Error OpenRouter: " + result.error.message);
-    }
-    if (!text) {
-      return fallback("Analisis AI dilewati", "Respons OpenRouter kosong (" + response.getResponseCode() + ").");
-    }
-    var parsed = JSON.parse(text);
-    return {
-      is_valid: !!parsed.is_valid,
-      flag: String(parsed.flag || assessment.status || "SEHAT"),
-      recommendation: String(parsed.recommendation || "-")
-    };
+    return JSON.parse(response.getContentText());
   } catch (error) {
-    return fallback("Analisis AI dilewati", "Error OpenRouter: " + error.toString());
+    logToSheet("ERROR", "postToOpenRouter gagal: " + error.toString());
+    return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Logging persistent: tulis debug/error ke tab "Logs" di spreadsheet yang sama.
+// Apps Script Logger log-nya terbatas; tab Logs bisa dicek kapan saja.
+// ---------------------------------------------------------------------------
+
+/**
+ * Tulis satu baris log ke sheet "Logs". Baris terbaru di paling bawah.
+ * Menambahkan kolom "Timestamp" dengan timezone spreadsheet.
+ */
+function logToSheet(level, message) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("Logs");
+    if (!sheet) {
+      sheet = ss.insertSheet("Logs");
+      sheet.appendRow(["Waktu", "Level", "Pesan"]);
+      sheet.getRange(1, 1, 1, 3).setFontWeight("bold");
+      sheet.setFrozenRows(1);
+    }
+    var now = Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone(), "yyyy-MM-dd HH:mm:ss");
+    sheet.appendRow([now, level, String(message).substring(0, 800)]);
+  } catch (logError) {
+    // Jangan biarkan logging mematikan alur utama.
+    Logger.log("logToSheet gagal: " + logError.toString());
+  }
+}
+
+/** Bersihkan tab Logs (header tetap). Panggil manual kalau kebanyakan. */
+function clearLogs() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Logs");
+  if (!sheet) return;
+  var lastRow = sheet.getLastRow();
+  if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).clearContent();
+  Logger.log("clearLogs: " + (lastRow - 1) + " baris log dihapus.");
+}
+
+/** Parse JSON dari teks model yang sering dibungkus teks/fence ```json```. */
+function parseAiJson(text) {
+  var source = String(text || "");
+  source = source.replace(/```(?:json)?/gi, "").trim();
+  var start = source.indexOf("{");
+  var end = source.lastIndexOf("}");
+  if (start !== -1 && end > start) {
+    source = source.substring(start, end + 1);
+  }
+  try {
+    return JSON.parse(source);
+  } catch (e) { return null; }
 }
 
 // ---------------------------------------------------------------------------
@@ -423,6 +574,29 @@ function createJsonResponse(data, statusCode) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Rate limiter minimal berbasis CacheService: membatasi request tulis per menit.
+ * Apps Script tidak punya middleware; counter per-menit ini cukup untuk
+ * melindungi kuota dari lonjakan/penyalahgunaan token. Bukan anti-bot penuh.
+ * ponytail: per-menit global (bukan per-IP) karena Apps Script tidak memberi IP client
+ * via doPost; sudah cukup server-side karena semua app pakai token yang sama.
+ */
+function allowRequest() {
+  try {
+    var cache = CacheService.getScriptCache();
+    var minuteKey = Math.floor(Date.now() / 60000).toString();
+    var count = Number(cache.get(minuteKey) || 0) + 1;
+    if (count > CONFIG.RATE_LIMIT_PER_MINUTE) {
+      return false;
+    }
+    cache.put(minuteKey, count.toString(), 65); // TTL = menit + 5 detik buffer
+    return true;
+  } catch (e) {
+    // Bila cache gagal (jarang), jangan blokir alur utama.
+    return true;
+  }
 }
 
 function getOrCreateFolder() {
@@ -494,8 +668,8 @@ function setupEnvironment() {
       // Ringkasan
       "Total Skor", "Status Health", "Catatan Field", "URL Foto Komponen Rumah", "URL Foto Sarana Sanitasi", "URL Foto Perilaku Penghuni",
 
-      // Analisis AI (2 kolom)
-      "Status Validasi AI", "Rekomendasi AI"
+      // Analisis AI (3 kolom)
+      "Status Validasi AI", "Penjelasan AI", "Rekomendasi AI"
     ];
 
     if (sheet.getLastRow() > 0) sheet.clear();
@@ -533,6 +707,7 @@ function ensureAiColumns(sheet) {
     "URL Foto Sarana Sanitasi",
     "URL Foto Perilaku Penghuni",
     "Status Validasi AI",
+    "Penjelasan AI",
     "Rekomendasi AI"
   ];
 

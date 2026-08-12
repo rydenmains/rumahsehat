@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_warm"
@@ -18,341 +17,35 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:title="@string/app_name"
-            app:titleTextColor="@color/forest_green" />
+            app:titleTextColor="@color/forest_green"
+            android:visibility="gone" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/scroll"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingBottom="@dimen/dimen_bottom_nav_pad">
+        android:layout_weight="1">
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollHome"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="@dimen/dimen_edge_margin"
-            android:paddingTop="@dimen/dimen_stack_md"
-            android:paddingBottom="@dimen/dimen_stack_lg">
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/dimen_bottom_nav_pad">
+            <include android:id="@+id/homeContent" layout="@layout/layout_home" />
+        </androidx.core.widget.NestedScrollView>
 
-            <!-- Greeting -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/greeting_hello"
-                android:textAppearance="@style/TextAppearance.RumahSehat.Body.Large"
-                android:textColor="@color/on_surface_variant" />
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollHistory"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/dimen_bottom_nav_pad"
+            android:visibility="gone">
+            <include android:id="@+id/historyContent" layout="@layout/layout_history" />
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/greeting_assessor"
-                android:textAppearance="@style/TextAppearance.RumahSehat.Headline.Large"
-                android:textColor="@color/on_surface" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_stack_sm"
-                android:text="@string/greeting_subtitle"
-                android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
-                android:textColor="@color/on_surface_variant" />
-
-            <!-- Sync banner -->
-            <LinearLayout
-                android:id="@+id/llSyncBanner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_stack_lg"
-                android:background="@drawable/bg_sync_banner"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="@dimen/dimen_sync_banner_pad"
-                android:visibility="gone">
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:contentDescription="@string/status_pending"
-                    android:src="@drawable/ic_sync"
-                    app:tint="@color/on_surface_variant" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/dimen_stack_md"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/sync_banner_title"
-                        android:textAppearance="@style/TextAppearance.RumahSehat.Label.Large"
-                        android:textColor="@color/on_surface" />
-
-                    <TextView
-                        android:id="@+id/tvPendingInfo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/dimen_stack_sm"
-                        android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
-                        android:textColor="@color/on_surface_variant" />
-                </LinearLayout>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSyncNow"
-                    style="@style/Widget.RumahSehat.Button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:minHeight="40dp"
-                    android:text="@string/sync_now"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <!-- CTA: Mulai Inspeksi Baru (full-width, forest green) -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/btnStartNew"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_stack_lg"
-                android:foreground="@drawable/bg_ripple"
-                app:cardBackgroundColor="@color/forest_green"
-                app:strokeWidth="0dp">
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="110dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="@dimen/dimen_edge_margin">
-
-                        <FrameLayout
-                            android:layout_width="@dimen/dimen_cta_badge"
-                            android:layout_height="@dimen/dimen_cta_badge"
-                            android:background="@drawable/bg_badge_white">
-
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:layout_gravity="center"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_assignment"
-                                app:tint="@color/on_primary" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/dimen_stack_md"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/start_inspection"
-                                android:textAppearance="@style/TextAppearance.RumahSehat.Title.Large"
-                                android:textColor="@color/on_primary" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/dimen_stack_sm"
-                                android:text="@string/cta_inspeksi_sub"
-                                android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
-                                android:textColor="@color/on_primary_container" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:layout_gravity="bottom|end"
-                        android:alpha="0.12"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_add"
-                        app:tint="@color/on_primary" />
-                </FrameLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- CTA: Lihat Riwayat (full-width, neutral) -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/btnViewHistory"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_stack_md"
-                android:background="@drawable/bg_cta_riwayat"
-                android:foreground="@drawable/bg_ripple"
-                app:cardBackgroundColor="@color/surface_low">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <FrameLayout
-                        android:layout_width="@dimen/dimen_cta_badge"
-                        android:layout_height="@dimen/dimen_cta_badge"
-                        android:background="@drawable/bg_id_pill">
-
-                        <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:layout_gravity="center"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_history"
-                            app:tint="@color/forest_green" />
-                    </FrameLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/dimen_stack_md"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/cta_history"
-                            android:textAppearance="@style/TextAppearance.RumahSehat.Title.Large"
-                            android:textColor="@color/on_surface" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/dimen_stack_sm"
-                            android:text="@string/cta_history_sub"
-                            android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
-                            android:textColor="@color/on_surface_variant" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Ringkasan Hari Ini -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_stack_lg"
-                android:text="@string/today_title"
-                android:textAppearance="@style/TextAppearance.RumahSehat.Title.Medium"
-                android:textColor="@color/on_surface" />
-
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.RumahSehat.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_stack_sm">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/dimen_stack_lg">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvTodayCompleted"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/forest_green"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            tools:text="0" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/dimen_stack_sm"
-                            android:text="@string/today_completed"
-                            android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
-                            android:textColor="@color/on_surface_variant" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:layout_marginHorizontal="@dimen/dimen_stack_lg"
-                        android:background="@color/outline_variant" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvTodayPending"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/status_pending"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            tools:text="0" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/dimen_stack_sm"
-                            android:text="@string/today_pending"
-                            android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
-                            android:textColor="@color/on_surface_variant" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <TextView
-                android:id="@+id/tvHistoryTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_stack_lg"
-                android:text="@string/history_title"
-                android:textAppearance="@style/TextAppearance.RumahSehat.Title.Medium"
-                android:textColor="@color/on_surface" />
-
-            <TextView
-                android:id="@+id/tvEmpty"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_stack_md"
-                android:text="@string/history_empty"
-                android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
-                android:textColor="@color/on_surface_variant" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvAssessments"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dimen_stack_sm"
-                android:clipToPadding="false"
-                android:nestedScrollingEnabled="false" />
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavTabs"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/surface_lowest"
-        app:elevation="8dp"
-        app:itemIconTint="@color/bottom_nav_item_color"
-        app:itemTextColor="@color/bottom_nav_item_color"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav" />
+    <include android:id="@+id/bottomNav" layout="@layout/layout_custom_bottom_nav" />
 
 </LinearLayout>

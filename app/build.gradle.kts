@@ -27,8 +27,8 @@ android {
         applicationId = "com.rumahsehat"
         minSdk = 23
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.3.2"
+        versionCode = 7
+        versionName = "1.4.0-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ksp {
@@ -49,8 +49,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             if (keystorePassword != null) {
                 signingConfig = signingConfigs.getByName("release")
             } else {

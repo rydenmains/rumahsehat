@@ -24,5 +24,6 @@ data class ScoreItem(
     val itemId: String, // 1.1, 2.1, etc.
     val score: Int,
     val isApplicable: Boolean = true,
+    val optionIndex: Int = -1, // indeks opsi yang dipilih; -1 = lama/kosong
     val reason: String? = null
 )

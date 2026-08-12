@@ -17,7 +17,7 @@ import java.net.URL
  */
 object AssessmentSync {
     const val SERVER_URL =
-        "https://script.google.com/macros/s/AKfycbypBzzKzkF4T63bUvft9B5KtTOsCcsew73jxG55mAsXsv6C_FByC-aqzTXYrJv8zlL4wg/exec"
+        "https://script.google.com/macros/s/AKfycbyVewbcY8D6NSc7ui9GwjcG9cLYr7Ee4LLzsrb4020-/dev"
 
     suspend fun push(dao: AssessmentDao, assessment: Assessment, items: List<ScoreItem>): Boolean =
         withContext(Dispatchers.IO) {
@@ -123,7 +123,8 @@ object AssessmentSync {
     private fun answerLabel(item: ScoreItem): String {
         if (!item.isApplicable) return "Tidak berlaku"
         val formItem = FormItemsProvider.getFormItems().firstOrNull { it.id == item.itemId } ?: return "-"
-        val option = formItem.options.firstOrNull { formItem.scoreForOption(formItem.options.indexOf(it)) == item.score }
+        val option = formItem.options.getOrNull(item.optionIndex)
+            ?: formItem.options.firstOrNull { formItem.scoreForOption(formItem.options.indexOf(it)) == item.score }
         return if (option != null) "${option.letter}. ${option.label}" else "-"
     }
 

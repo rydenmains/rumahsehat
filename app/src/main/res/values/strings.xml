@@ -56,6 +56,16 @@
     <string name="cat_sanitation">II. Sarana Sanitasi</string>
     <string name="cat_behavior">III. Perilaku Penghuni</string>
 
+    <!-- Banner transisi section (baris tipis) -->
+    <string name="banner_housing">I · KOMPONEN RUMAH</string>
+    <string name="banner_sanitation">II · SARANA SANITASI</string>
+    <string name="banner_behavior">III · PERILAKU PENGHUNI</string>
+
+    <!-- Halaman-0 identitas -->
+    <string name="identity_title">Identitas Petugas</string>
+    <string name="identity_hint">Isi nama petugas dan instansi, lalu tekan Lanjut untuk mulai menilai.</string>
+    <string name="camera_cd">Kamera dokumentasi bagian ini</string>
+
     <!-- I. Housing Components -->
     <string name="item_ceiling">Langit-langit</string>
     <string name="item_walls">Dinding</string>
@@ -85,8 +95,8 @@
     <string name="photo_kitchen_spal">Foto 3: Area Dapur / SPAL / Sampah</string>
     <string name="btn_take_photo">Ambil Foto</string>
     <string name="btn_retake_photo">Ganti Foto</string>
-    <string name="photo_hint_missing">Foto belum diambil. Ketuk tombol di bawah untuk membuka kamera.</string>
-    <string name="photo_hint_taken">Foto sudah diambil. Ketuk untuk mengganti.</string>
+    <string name="photo_hint_missing">Foto belum diambil. Ketuk tombol kamera (kanan bawah) untuk membuka kamera.</string>
+    <string name="photo_hint_taken">Foto sudah diambil. Ketuk kamera untuk mengganti.</string>
 
     <!-- Tinjauan (Review) -->
     <string name="review_title">Tinjauan Penilaian</string>

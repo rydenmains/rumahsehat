@@ -13,54 +13,10 @@
         android:padding="@dimen/dimen_edge_margin"
         android:paddingBottom="@dimen/dimen_stack_lg">
 
-        <!-- Transition banner: first question of a section -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cvSectionBanner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:cardBackgroundColor="@color/secondary_container"
-            app:cardCornerRadius="@dimen/dimen_card_radius"
-            app:strokeWidth="0dp"
-            tools:visibility="visible">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="@dimen/dimen_stack_md">
-
-                <View
-                    android:layout_width="4dp"
-                    android:layout_height="24dp"
-                    android:background="@drawable/bg_number_badge" />
-
-                <TextView
-                    android:id="@+id/tvSectionBanner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/dimen_stack_md"
-                    android:textAppearance="@style/TextAppearance.RumahSehat.Title.Medium"
-                    android:textColor="@color/forest_green"
-                    tools:text="II. SARANA SANITASI" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Section aktif (uppercase, primary) -->
-        <TextView
-            android:id="@+id/tvSectionName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_stack_sm"
-            android:textAppearance="@style/TextAppearance.RumahSehat.Label.Medium"
-            android:textColor="@color/forest_green"
-            tools:text="KOMPONEN RUMAH" />
-
+        <!-- Header soal: badge section + judul -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_stack_md"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -101,15 +57,20 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Banner transisi section: baris teks tipis, hanya di soal pertama (1.1/2.1/3.1) -->
         <TextView
-            android:id="@+id/tvSubtitle"
+            android:id="@+id/tvSectionBanner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_stack_sm"
-            android:text="@string/level_hint"
-            android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
-            android:textColor="@color/on_surface_variant" />
+            android:layout_marginTop="@dimen/dimen_stack_md"
+            android:textAppearance="@style/TextAppearance.RumahSehat.Label.Medium"
+            android:textColor="@color/forest_green"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="II · SARANA SANITASI"
+            tools:visibility="visible" />
 
+        <!-- Kartu jawaban -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.RumahSehat.Card"
             android:layout_width="match_parent"
@@ -139,30 +100,23 @@
                         android:id="@+id/etNotes"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="textMultiLine"
-                        android:maxLines="3" />
+                        android:inputType="text"
+                        android:maxLines="1" />
                 </com.google.android.material.textfield.TextInputLayout>
-
-                <CheckBox
-                    android:id="@+id/cbApplicable"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:checked="true"
-                    android:text="@string/applicable"
-                    android:textColor="@color/on_surface_variant" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Status foto (hanya di soal pertama section) -->
         <TextView
             android:id="@+id/tvPhotoCaption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/dimen_stack_lg"
-            android:textAppearance="@style/TextAppearance.RumahSehat.Title.Medium"
+            android:textAppearance="@style/TextAppearance.RumahSehat.Label.Large"
             android:textColor="@color/on_surface"
             android:visibility="gone"
-            tools:text="Dokumentasi Tampak Depan Rumah (Foto 1)" />
+            tools:text="Foto 1: Tampak Depan Rumah"
+            tools:visibility="visible" />
 
         <TextView
             android:id="@+id/tvPhotoHint"
@@ -172,22 +126,7 @@
             android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
             android:textColor="@color/on_surface_variant"
             android:visibility="gone"
-            tools:text="Foto belum diambil. Ketuk tombol di bawah untuk membuka kamera." />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnPhoto"
-            style="@style/Widget.RumahSehat.Button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dimen_stack_sm"
-            android:minHeight="56dp"
-            android:textColor="@color/on_primary"
-            android:visibility="gone"
-            app:backgroundTint="@color/forest_green"
-            app:icon="@drawable/ic_camera"
-            app:iconGravity="textStart"
-            app:iconPadding="@dimen/dimen_stack_sm"
-            app:iconTint="@color/on_primary"
-            tools:text="Ambil Foto" />
+            tools:text="Foto belum diambil. Ketuk tombol kamera (kanan bawah) untuk membuka kamera."
+            tools:visibility="visible" />
     </LinearLayout>
 </ScrollView>

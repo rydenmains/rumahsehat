@@ -88,7 +88,8 @@ object FormItemsProvider {
             FormItem("3.4", R.string.item_behavior_feces, 20, listOf(
                 Option('a', "Dibuang ke sungai/kebun/kolam sembarangan", 0f),
                 Option('b', "Kadang-kadang ke jamban", 0.5f),
-                Option('c', "Setiap hari dibuang ke jamban", 1f)
+                Option('c', "Setiap hari dibuang ke jamban", 1f),
+                Option('d', "Tidak ada bayi/balita di rumah (tidak berlaku)", 1f)
             )),
             FormItem("3.5", R.string.item_behavior_trash, 20, listOf(
                 Option('a', "Dibuang ke sungai / kebun / kolam sembarangan", 0f),

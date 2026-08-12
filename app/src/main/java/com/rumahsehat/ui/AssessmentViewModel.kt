@@ -24,6 +24,13 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
     val formItems: List<FormItem> get() = _formItems
     private val weights = _formItems.associate { it.id to it.maxScore }
     private val photoPaths = mutableMapOf<String, String>()
+    private val _photoPaths = MutableLiveData(emptyMap<String, String>())
+    /** Status foto per section; observe oleh fragment untuk refresh hint. */
+    val photoPathsLive: LiveData<Map<String, String>> get() = _photoPaths
+
+    // Identitas dari halaman-0 (dipakai subtitle AppBar + saat simpan).
+    var assessorName: String = ""
+    var companyName: String = ""
 
     init {
         val dao = AppDatabase.getDatabase(application).assessmentDao()
@@ -42,9 +49,12 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
 
     fun markPhotoTaken(section: String, path: String) {
         photoPaths[section] = path
+        _photoPaths.value = photoPaths.toMap()
     }
 
     fun isPhotoTaken(section: String): Boolean = photoPaths.containsKey(section)
+
+    fun photoPath(section: String): String? = photoPaths[section]
 
     fun missingPhotos(): List<String> = photoKeys.filter { it !in photoPaths }
 
@@ -92,6 +102,7 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
                     itemId = it.id,
                     score = it.currentScore,
                     isApplicable = it.isApplicable,
+                    optionIndex = it.selectedOptionIndex,
                     reason = it.reason
                 )
             }
