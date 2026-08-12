@@ -51,15 +51,19 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            if (keystorePassword != null) {
-                signingConfig = signingConfigs.getByName("release")
-            } else {
-                // ponytail: tanpa password keystore upload, fallback ke debug key
-                // supaya APK tetap bisa di-install & di-index (ganti di local.properties
-                // kalau mau cert asli: keystore.password=...)
-                signingConfig = signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+
+    afterEvaluate {
+        gradle.taskGraph.whenReady {
+            val buildsRelease = allTasks.any { it.project.name == "app" && it.name.contains("Release") }
+            if (buildsRelease && keystorePassword == null) {
+                throw GradleException(
+                    "Release build membutuhkan RS_KEYSTORE_PASSWORD / keystore.password di local.properties"
+                )
+            }
         }
     }
     flavorDimensions += "role"
