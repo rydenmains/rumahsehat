@@ -128,5 +128,25 @@
             android:visibility="gone"
             tools:text="Foto belum diambil. Ketuk tombol kamera (kanan bawah) untuk membuka kamera."
             tools:visibility="visible" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardPhotoPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dimen_stack_md"
+            android:visibility="gone"
+            app:cardCornerRadius="@dimen/dimen_card_radius"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/outline_variant"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/ivPhotoPreview"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:contentDescription="@string/camera_cd"
+                android:scaleType="centerCrop" />
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>

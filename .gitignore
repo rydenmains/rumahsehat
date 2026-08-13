@@ -20,4 +20,12 @@ local.properties
 planbackend.md
 /plan.md
 backend/plan.md
+/cleaningplan.md
+/journey.md
+/rumahsehat.md
+
+# Tooling lokal (opencode / dev)
+/.agents/
+/skills-lock.json
+/git_history.txt
 

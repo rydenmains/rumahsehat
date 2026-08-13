@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Eco-Systemic Professional (desain.md) -->
+    <!-- Eco-Systemic Professional (desain.md) — tonal scheme -->
     <color name="background_warm">#F7FAFA</color>
     <color name="surface_lowest">#FFFFFF</color>
     <color name="surface_low">#F1F4F4</color>
@@ -11,8 +11,11 @@
 
     <color name="forest_green">#00463E</color>
     <color name="emerald_accent">#006A60</color>
+    <color name="accent_amber">#B26A00</color>
     <color name="camera_fab_semi">#7200463E</color>
     <color name="on_primary">#FFFFFF</color>
+    <color name="on_primary_soft">#B3FFFFFF</color>
+    <color name="overlay_on_primary">#26FFFFFF</color>
     <color name="primary_container">#006A60</color>
     <color name="on_primary_container">#95E7DA</color>
     <color name="secondary_container">#CCE7EC</color>
@@ -26,10 +29,6 @@
     <color name="status_pass">#2E7D32</color>
     <color name="status_fail">#B00020</color>
     <color name="status_pending">#FFA000</color>
-
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#005048</color>
-    <color name="purple_700">#003A34</color>
-    <color name="teal_200">#95E7DA</color>
-    <color name="teal_700">#006A60</color>
+    <color name="status_pending_container">#FFF3E0</color>
+    <color name="status_pending_on">#E65100</color>
 </resources>

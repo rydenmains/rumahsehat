@@ -28,9 +28,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/new_assessment"
-                android:textColor="@color/forest_green"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.RumahSehat.Title.Large"
+                android:textColor="@color/forest_green" />
 
             <TextView
                 android:id="@+id/tvIdentitySub"
@@ -47,7 +46,7 @@
             android:layout_height="wrap_content"
             android:progress="0"
             app:indicatorColor="@color/emerald_accent"
-            app:trackColor="#E0E0E0" />
+            app:trackColor="@color/outline_variant" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.viewpager2.widget.ViewPager2

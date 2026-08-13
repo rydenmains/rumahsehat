@@ -35,9 +35,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="@string/nav_home"
-            android:textSize="12sp"
-            android:textColor="@color/bottom_nav_item_color"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.RumahSehat.Label.Medium"
+            android:textColor="@color/bottom_nav_item_color" />
     </LinearLayout>
 
     <LinearLayout
@@ -67,9 +66,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="@string/nav_inspect"
-            android:textSize="12sp"
-            android:textColor="@color/bottom_nav_item_color"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.RumahSehat.Label.Medium"
+            android:textColor="@color/bottom_nav_item_color" />
     </LinearLayout>
 
     <LinearLayout
@@ -98,9 +96,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="@string/nav_history"
-            android:textSize="12sp"
-            android:textColor="@color/bottom_nav_item_color"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.RumahSehat.Label.Medium"
+            android:textColor="@color/bottom_nav_item_color" />
     </LinearLayout>
 
 </LinearLayout>

@@ -27,8 +27,8 @@ android {
         applicationId = "com.rumahsehat"
         minSdk = 23
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.4.0-beta"
+        versionCode = 8
+        versionName = "1.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ksp {

@@ -23,9 +23,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:text="@string/app_name"
+        android:textAppearance="@style/TextAppearance.RumahSehat.Headline.Large"
         android:textColor="@color/forest_green"
-        android:textSize="34sp"
-        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@id/tvTagline"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -38,8 +37,8 @@
         android:layout_marginTop="8dp"
         android:gravity="center"
         android:text="@string/splash_tagline"
+        android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
         android:textColor="@color/on_surface_variant"
-        android:textSize="14sp"
         app:layout_constraintBottom_toTopOf="@id/llInit"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -58,21 +57,19 @@
         app:layout_constraintVertical_bias="0.82">
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:layout_width="22dp"
-            android:layout_height="22dp"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
             app:indicatorColor="@color/emerald_accent"
-            app:indicatorSize="22dp"
-            app:trackThickness="2.5dp" />
+            app:indicatorSize="26dp"
+            app:trackThickness="3dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:letterSpacing="0.08"
             android:text="@string/splash_init"
-            android:textColor="@color/on_surface_variant"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.RumahSehat.Label.Medium"
+            android:textColor="@color/on_surface_variant" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

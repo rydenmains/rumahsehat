@@ -10,29 +10,28 @@
     android:background="@color/background_warm">
 
     <TextView
+        android:id="@+id/tvGreeting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Selamat Datang,"
-        android:textColor="@color/on_surface"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:text="@string/greeting_welcome"
+        android:textAppearance="@style/TextAppearance.RumahSehat.Label.Large"
+        android:textColor="@color/forest_green" />
 
     <TextView
         android:id="@+id/tvHomeTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/app_name"
-        android:textColor="@color/on_surface"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textAppearance="@style/TextAppearance.RumahSehat.Headline.Small"
+        android:textColor="@color/on_surface" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Siap untuk melakukan inspeksi kesehatan lingkungan hari ini?"
-        android:textColor="@color/on_surface_variant"
-        android:textSize="14sp" />
+        android:text="@string/greeting_subtitle"
+        android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+        android:textColor="@color/on_surface_variant" />
 
     <!-- Sync Status -->
     <com.google.android.material.card.MaterialCardView
@@ -41,7 +40,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         app:cardBackgroundColor="@color/surface_low"
-        app:cardCornerRadius="12dp"
+        app:cardCornerRadius="@dimen/dimen_card_radius"
         app:cardElevation="0dp"
         app:strokeWidth="1dp"
         app:strokeColor="@color/outline_variant">
@@ -58,7 +57,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@drawable/bg_number_badge"
-                android:backgroundTint="#DCEBEA"
+                android:backgroundTint="@color/secondary_container"
                 android:padding="8dp"
                 android:src="@drawable/ic_sync"
                 app:tint="@color/forest_green" />
@@ -73,31 +72,28 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Status Sinkronisasi"
-                    android:textColor="@color/on_surface"
-                    android:textStyle="bold"
-                    android:textSize="14sp" />
+                    android:text="@string/sync_banner_title"
+                    android:textAppearance="@style/TextAppearance.RumahSehat.Label.Large"
+                    android:textColor="@color/on_surface" />
 
                 <TextView
                     android:id="@+id/tvPendingInfo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    tools:text="3 data menunggu dikirim"
-                    android:textColor="@color/on_surface_variant"
-                    android:textSize="12sp" />
+                    android:textAppearance="@style/TextAppearance.RumahSehat.Label.Medium"
+                    android:textColor="@color/on_surface_variant" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/btnSyncNow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Kirim\nSekarang"
+                android:text="@string/sync_now"
+                android:textAppearance="@style/TextAppearance.RumahSehat.Label.Medium"
                 android:textColor="@color/forest_green"
-                android:textStyle="bold"
                 android:gravity="center"
                 android:clickable="true"
-                android:focusable="true"
-                android:textSize="12sp" />
+                android:focusable="true" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -108,8 +104,8 @@
         android:layout_height="140dp"
         android:layout_marginTop="16dp"
         app:cardBackgroundColor="@color/forest_green"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="2dp"
+        app:cardCornerRadius="@dimen/dimen_card_radius"
+        app:cardElevation="3dp"
         android:clickable="true"
         android:focusable="true"
         android:foreground="?attr/selectableItemBackground">
@@ -138,7 +134,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:background="@drawable/bg_number_badge"
-                    android:backgroundTint="#20FFFFFF"
+                    android:backgroundTint="@color/overlay_on_primary"
                     android:padding="8dp"
                     android:src="@drawable/ic_assignment"
                     app:tint="@color/white" />
@@ -147,18 +143,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Mulai Inspeksi Baru"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"
-                    android:textSize="18sp" />
+                    android:text="@string/start_inspection"
+                    android:textAppearance="@style/TextAppearance.RumahSehat.Title.Medium"
+                    android:textColor="@color/white" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Mulai proses penilaian kesehatan rumah baru."
-                    android:textColor="#E0E0E0"
-                    android:textSize="12sp" />
+                    android:text="@string/cta_inspeksi_sub"
+                    android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+                    android:textColor="@color/on_primary_soft" />
             </LinearLayout>
         </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -170,7 +165,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         app:cardBackgroundColor="@color/surface_low"
-        app:cardCornerRadius="12dp"
+        app:cardCornerRadius="@dimen/dimen_card_radius"
         app:cardElevation="0dp"
         app:strokeWidth="1dp"
         app:strokeColor="@color/outline_variant"
@@ -188,7 +183,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@drawable/bg_number_badge"
-                android:backgroundTint="#DCEBEA"
+                android:backgroundTint="@color/secondary_container"
                 android:padding="8dp"
                 android:src="@drawable/ic_history"
                 app:tint="@color/forest_green" />
@@ -197,18 +192,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Lihat Riwayat"
-                android:textColor="@color/on_surface"
-                android:textStyle="bold"
-                android:textSize="18sp" />
+                android:text="@string/cta_history"
+                android:textAppearance="@style/TextAppearance.RumahSehat.Title.Medium"
+                android:textColor="@color/on_surface" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Akses inspeksi sebelumnya dan draf tersimpan."
-                android:textColor="@color/on_surface_variant"
-                android:textSize="12sp" />
+                android:text="@string/cta_history_sub"
+                android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+                android:textColor="@color/on_surface_variant" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -217,8 +211,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        app:cardBackgroundColor="@color/white"
-        app:cardCornerRadius="12dp"
+        app:cardBackgroundColor="@color/surface_lowest"
+        app:cardCornerRadius="@dimen/dimen_card_radius"
         app:cardElevation="0dp"
         app:strokeWidth="1dp"
         app:strokeColor="@color/outline_variant">
@@ -232,10 +226,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ringkasan Hari Ini"
-                android:textColor="@color/on_surface"
-                android:textStyle="bold"
-                android:textSize="14sp" />
+                android:text="@string/today_title"
+                android:textAppearance="@style/TextAppearance.RumahSehat.Label.Large"
+                android:textColor="@color/on_surface" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -252,9 +245,9 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Selesai"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="12sp" />
+                        android:text="@string/today_completed"
+                        android:textAppearance="@style/TextAppearance.RumahSehat.Label.Medium"
+                        android:textColor="@color/on_surface_variant" />
 
                     <TextView
                         android:id="@+id/tvTodayCompleted"
@@ -262,9 +255,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="0"
-                        android:textColor="@color/forest_green"
-                        android:textStyle="bold"
-                        android:textSize="28sp" />
+                        android:textAppearance="@style/TextAppearance.RumahSehat.Headline.Medium"
+                        android:textColor="@color/forest_green" />
                 </LinearLayout>
 
                 <View
@@ -282,9 +274,9 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Draf"
-                        android:textColor="@color/on_surface_variant"
-                        android:textSize="12sp" />
+                        android:text="@string/today_pending"
+                        android:textAppearance="@style/TextAppearance.RumahSehat.Label.Medium"
+                        android:textColor="@color/on_surface_variant" />
 
                     <TextView
                         android:id="@+id/tvTodayPending"
@@ -292,9 +284,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="1"
-                        android:textColor="@color/on_surface"
-                        android:textStyle="bold"
-                        android:textSize="28sp" />
+                        android:textAppearance="@style/TextAppearance.RumahSehat.Headline.Medium"
+                        android:textColor="@color/on_surface" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>

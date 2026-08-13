@@ -1,5 +1,7 @@
 package com.rumahsehat.ui
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -91,7 +93,7 @@ class QuestionFragment : Fragment() {
             val rb = RadioButton(requireContext())
             rb.id = option.letter.code
             rb.text = option.label
-            rb.textSize = 14f
+            rb.setTextAppearance(R.style.TextAppearance_RumahSehat_Body_Medium)
             rb.setTextColor(requireContext().getColor(R.color.on_surface))
             rb.setBackgroundResource(R.drawable.bg_radio_card)
             rb.setPaddingRelative(dp(12), dp(12), dp(12), dp(12))
@@ -125,8 +127,30 @@ class QuestionFragment : Fragment() {
     }
 
     private fun updatePhotoHint() {
-        val taken = viewModel.isPhotoTaken(sectionKey)
+        val path = viewModel.photoPath(sectionKey)
+        val taken = path != null
         binding.tvPhotoHint.setText(if (taken) R.string.photo_hint_taken else R.string.photo_hint_missing)
+        val preview = if (taken) decodePreview(path) else null
+        if (preview != null) {
+            binding.ivPhotoPreview.setImageBitmap(preview)
+            binding.cardPhotoPreview.visibility = View.VISIBLE
+        } else {
+            binding.cardPhotoPreview.visibility = View.GONE
+        }
+    }
+
+    // ponytail: decode takar (inSampleSize), full-res HP lapangan bisa 12MP = 48MB bitmap.
+    private fun decodePreview(path: String?): Bitmap? {
+        if (path == null) return null
+        return try {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(path, bounds)
+            var sample = 1
+            while (bounds.outWidth / (sample * 2) >= 800 || bounds.outHeight / (sample * 2) >= 800) sample *= 2
+            BitmapFactory.decodeFile(path, BitmapFactory.Options().apply { inSampleSize = sample })
+        } catch (_: OutOfMemoryError) {
+            null
+        }
     }
 
     private fun dp(value: Int): Int =

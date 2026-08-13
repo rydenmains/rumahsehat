@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.rumahsehat.R
 import com.rumahsehat.databinding.ActivityMainBinding
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -41,6 +42,8 @@ class MainActivity : AppCompatActivity() {
         binding.homeContent.btnViewHistory.setOnClickListener {
             switchToTab(R.id.nav_history)
         }
+
+        binding.homeContent.tvGreeting.setText(greetingForHour(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)))
 
         // Setup History Content Actions
         binding.historyContent.btnSyncAllHistory.setOnClickListener {
@@ -76,7 +79,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.allAssessments.observe(this) { assessments ->
             adapter.submitList(assessments)
-            binding.historyContent.tvEmpty.visibility =
+            binding.historyContent.llEmpty.visibility =
                 if (assessments.isEmpty()) View.VISIBLE else View.GONE
 
             val pending = assessments.count { it.syncStatus != "SYNCED" }
@@ -86,6 +89,13 @@ class MainActivity : AppCompatActivity() {
             binding.homeContent.tvTodayCompleted.text = assessments.count { it.syncStatus == "SYNCED" }.toString()
             binding.homeContent.tvTodayPending.text = pending.toString()
         }
+    }
+
+    private fun greetingForHour(hour: Int): Int = when (hour) {
+        in 5..10 -> R.string.greeting_morning
+        in 11..14 -> R.string.greeting_afternoon
+        in 15..17 -> R.string.greeting_evening
+        else -> R.string.greeting_night
     }
 
     private fun switchToTab(tabId: Int) {
@@ -112,7 +122,7 @@ class MainActivity : AppCompatActivity() {
         if (syncSpin != null) return
         val icon = binding.homeContent.ivSyncIcon
         val animator = ObjectAnimator.ofFloat(icon, "rotation", 0f, 360f).apply {
-            duration = 900
+            duration = 1000
             repeatCount = ValueAnimator.INFINITE
             interpolator = LinearInterpolator()
             start()

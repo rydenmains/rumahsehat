@@ -4,8 +4,9 @@ Aplikasi **Android** untuk penilaian kesehatan lingkungan rumah oleh petugas lap
 
 ## Pekerjaan kita (status saat ini)
 
-- **v1.4 (sedang jalan)**: redesign premium UI — font Plus Jakarta Sans, warna forest-green dipertajam, identitas petugas jadi halaman-0, tombol kamera bulat di bar bawah (muncul di halaman awal tiap section), kartu jawaban dirampingkan. Rencana lengkap di `nextplan.md`.
-- **Backend**: Google Apps Script (`backend/Code.gs`) → Google Sheets. Idempotensi anti-duplikat, analisis AI foto rumah, log persisten ke tab "Logs". Rencana di `planbackend.md` & `backend/plan.md`.
+- **v1.5.0 (rilis)**: redesign premium UI — font Plus Jakarta Sans, warna forest-green dipertajam, identitas petugas jadi halaman-0, tombol kamera bulat di bar bawah, kartu jawaban dirampingkan, splash + animasi sync halus.
+- **CI/CD**: `.github/workflows/android.yml` — build debug + unit test otomatis tiap push/PR; build release signed manual (secrets: `RS_KEYSTORE_BASE64`, `RS_KEYSTORE_PASSWORD`, `RS_API_TOKEN`).
+- **Backend**: Google Apps Script (`backend/Code.gs`) → Google Sheets. Idempotensi anti-duplikat, analisis AI foto rumah, log persisten ke tab "Logs". Rencana di `planbackend.md` & `backend/plan.md` (tidak di-commit).
 
 ## Stack
 

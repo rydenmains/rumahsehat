@@ -1,0 +1,69 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-debug:
+    name: Build debug + unit test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug + test
+        run: ./gradlew assembleUserDebug testUserDebugUnitTest --no-daemon
+        env:
+          RS_API_TOKEN: ${{ secrets.RS_API_TOKEN }}
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-user-debug
+          path: app/build/outputs/apk/user/debug/app-user-debug.apk
+          if-no-files-found: error
+
+  build-release:
+    name: Build signed release (manual)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Butuh secrets di repo Settings > Secrets:
+      #   RS_KEYSTORE_BASE64    -> base64 dari rumahsehat-upload.keystore
+      #   RS_KEYSTORE_PASSWORD  -> password keystore (sama dengan keyPassword)
+      #   RS_API_TOKEN          -> token backend (BuildConfig.API_TOKEN)
+      - name: Decode keystore
+        env:
+          RS_KEYSTORE_BASE64: ${{ secrets.RS_KEYSTORE_BASE64 }}
+        run: echo "$RS_KEYSTORE_BASE64" | base64 -d > rumahsehat-upload.keystore
+
+      - name: Build signed release
+        run: ./gradlew assembleUserRelease --no-daemon
+        env:
+          RS_API_TOKEN: ${{ secrets.RS_API_TOKEN }}
+          RS_KEYSTORE_PASSWORD: ${{ secrets.RS_KEYSTORE_PASSWORD }}
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-user-release
+          path: app/build/outputs/apk/user/release/app-user-release.apk
+          if-no-files-found: error

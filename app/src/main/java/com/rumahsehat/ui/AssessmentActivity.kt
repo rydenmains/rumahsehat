@@ -62,7 +62,7 @@ class AssessmentActivity : AppCompatActivity() {
                         when (sectionPrefix) {
                             "1" -> getColor(R.color.forest_green)
                             "2" -> getColor(R.color.emerald_accent)
-                            else -> getColor(R.color.on_primary_container)
+                            else -> getColor(R.color.accent_amber)
                         }
                     )
                     currentSectionKey = AssessmentViewModel.photoKeyFor(viewModel.getFormItemAt(position - 1).id)
@@ -203,6 +203,24 @@ class AssessmentActivity : AppCompatActivity() {
             return
         }
 
+        val answered = viewModel.formItems.count { it.isApplicable && it.selectedOptionIndex >= 0 }
+        val applicable = viewModel.formItems.count { it.isApplicable }
+        val photosTotal = AssessmentViewModel.photoKeys.size
+        val photosTaken = photosTotal - viewModel.missingPhotos().size
+
+        AlertDialog.Builder(this, R.style.AlertDialogCustom)
+            .setTitle(R.string.confirm_save_title)
+            .setMessage(
+                getString(R.string.confirm_save_message, answered, applicable, photosTaken, photosTotal)
+            )
+            .setPositiveButton(getString(R.string.save_assessment)) { _, _ ->
+                doSave(assessor, company)
+            }
+            .setNegativeButton(getString(R.string.back), null)
+            .show()
+    }
+
+    private fun doSave(assessor: String, company: String) {
         viewModel.saveAssessment(assessor, company)
         Toast.makeText(this, R.string.msg_saved, Toast.LENGTH_SHORT).show()
         finish()

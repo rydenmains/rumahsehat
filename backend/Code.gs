@@ -334,11 +334,37 @@ function processPendingAi() {
       status: String(data[r][headers.indexOf("Status Health")] || "SEHAT")
     });
 
+    var colHealth = headers.indexOf("Status Health") + 1;
+
+    // FOTO TIDAK VALID (buram/tidak relevan): tandai jelas, jangan ubah verdict.
+    if (result.is_valid === false) {
+      sheet.getRange(r + 1, colStatus).setValue("FOTO TIDAK VALID");
+      if (colExplanation > 0) sheet.getRange(r + 1, colExplanation).setValue(result.explanation || "Foto tidak jelas / tidak menunjukkan kondisi rumah.");
+      sheet.getRange(r + 1, colRecommendation).setValue(result.recommendation || "Foto tidak jelas; mohon ulangi pengambilan foto.");
+      logToSheet("WARN", "AI " + String(data[r][0]) + " -> FOTO TIDAK VALID");
+      processed++;
+      continue;
+    }
+
     sheet.getRange(r + 1, colStatus).setValue(result.flag);
     if (result.explanation) {
       if (colExplanation > 0) sheet.getRange(r + 1, colExplanation).setValue(result.explanation);
     }
     sheet.getRange(r + 1, colRecommendation).setValue(result.recommendation);
+
+    // BODYGUARD: AI bisa menurunkan verdict FINAL bila foto tidak mendukung SEHAT.
+    // Petugas jawab SEHAT tapi foto jelas menunjukkan kondisi buruk → diturunkan.
+    if (colHealth > 0) {
+      var prevHealth = String(data[r][colHealth - 1] || "").toUpperCase();
+      var severity = { "SEHAT": 0, "PERLU PERBAIKAN": 1, "TIDAK SEHAT": 2 };
+      var aiSev = severity[result.flag];
+      var prevSev = severity[prevHealth];
+      if (aiSev !== undefined && prevSev !== undefined && aiSev > prevSev) {
+        sheet.getRange(r + 1, colHealth).setValue(result.flag);
+        logToSheet("WARN", "AI bodyguard: " + String(data[r][0]) + " Status Health diturunkan " + prevHealth + " -> " + result.flag);
+      }
+    }
+
     logToSheet("INFO", "AI " + String(data[r][0]) + " -> " + result.flag + " | " + result.recommendation);
     processed++;
   }
@@ -432,7 +458,9 @@ function analyzeAssessmentWithGemini(photos, assessment) {
     "   Bila foto buram / sudut tidak jelas / tidak menampilkan ruangan yang dimaksud,",
     "   tuliskan jelas bahwa jenis foto tidak bisa dipastikan (mis. 'foto tidak jelas, tidak bisa dipastikan').",
     "2. Gunakan jawaban petugas sebagai sumber utama; foto sebagai pendukung.",
-    "   Jangan menurunkan penilaian hanya karena foto buram bila jawaban petugas lengkap.",
+    "   BODYGUARD: jika foto dengan jelas menunjukkan kondisi yang BERTENTANGAN dengan jawaban",
+    "   (mis. jawaban 'SEHAT' tapi foto menunjukkan genangan air, sampah menumpuk, jamban kotor,",
+    "   SPAL terbuka, dinding/lantai rusak parah), maka flag foto mengalahkan jawaban petugas.",
     "3. Putuskan flag akhir (SEHAT / TIDAK SEHAT / PERLU PERBAIKAN) dari gabungan kedua sumber.",
     "",
     "Jawab JSON HANYA dengan format:",
@@ -485,10 +513,11 @@ function analyzeAssessmentWithGemini(photos, assessment) {
     perPhoto = parsed.per_photo.map(function (p) { return String(p); });
   }
   var explanation = [
-    "Dasar penilaian (gabungan jawaban + foto):",
+    "Dasar penilaian (gabungan jawaban petugas + analisis foto):",
     "Foto 1 (depan rumah): " + (perPhoto[0] || "-"),
     "Foto 2 (sanitasi): " + (perPhoto[1] || "-"),
-    "Foto 3 (dapur/SPAL): " + (perPhoto[2] || "-")
+    "Foto 3 (dapur/SPAL): " + (perPhoto[2] || "-"),
+    "Kesimpulan: " + normalizedFlag + ". " + (parsed.recommendation || "")
   ].join("\n");
   return {
     is_valid: !!parsed.is_valid,

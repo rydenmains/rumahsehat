@@ -13,18 +13,17 @@
         android:id="@+id/tvHistoryTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Riwayat Penilaian"
-        android:textColor="@color/on_surface"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:text="@string/history_title"
+        android:textAppearance="@style/TextAppearance.RumahSehat.Headline.Small"
+        android:textColor="@color/on_surface" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Daftar penilaian yang telah Anda selesaikan. Pantau status pengiriman data ke sistem pusat."
-        android:textColor="@color/on_surface_variant"
-        android:textSize="14sp" />
+        android:text="@string/cta_history_sub"
+        android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+        android:textColor="@color/on_surface_variant" />
 
     <!-- Search Bar -->
     <com.google.android.material.textfield.TextInputLayout
@@ -46,8 +45,8 @@
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Cari berdasarkan lokasi..."
-            android:textSize="14sp"
+            android:hint="@string/history_search_hint"
+            android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
             android:textColorHint="@color/on_surface_variant"
             android:textColor="@color/on_surface"
             android:paddingVertical="12dp" />
@@ -73,23 +72,50 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="Sinkronkan Semua"
+            android:text="@string/sync_now"
             app:chipIcon="@drawable/ic_sync"
             app:chipIconTint="@color/forest_green"
-            app:chipBackgroundColor="#DCEBEA"
+            app:chipBackgroundColor="@color/secondary_container"
             android:textColor="@color/forest_green"
             style="@style/Widget.Material3.Chip.Assist" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvEmpty"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/llEmpty"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:layout_gravity="center"
-        android:text="@string/history_empty"
-        android:textColor="@color/on_surface_variant"
-        android:visibility="gone" />
+        android:layout_marginTop="48dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/bg_number_badge"
+            android:backgroundTint="@color/secondary_container"
+            android:contentDescription="@string/history_title"
+            android:padding="18dp"
+            android:src="@drawable/ic_history"
+            app:tint="@color/forest_green" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/history_empty"
+            android:textAppearance="@style/TextAppearance.RumahSehat.Title.Medium"
+            android:textColor="@color/on_surface" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="@string/history_empty_sub"
+            android:textAppearance="@style/TextAppearance.RumahSehat.Body.Medium"
+            android:textColor="@color/on_surface_variant" />
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvAssessments"
