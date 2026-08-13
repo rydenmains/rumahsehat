@@ -20,6 +20,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
       - name: Build debug + test
         run: ./gradlew assembleUserDebug testUserDebugUnitTest --no-daemon
         env:
@@ -45,6 +48,9 @@ jobs:
           java-version: 17
 
       - uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
 
       # Butuh secrets di repo Settings > Secrets:
       #   RS_KEYSTORE_BASE64    -> base64 dari rumahsehat-upload.keystore
