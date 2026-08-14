@@ -30,6 +30,19 @@ Bikin penilaian kesehatan rumah jadi cepat dan rapi. Isi 17 indikator, foto kond
 
 ---
 
+## Syarat perangkat (minimum)
+
+| Komponen | Minimum |
+|---|---|
+| Android | 6.0 Marshmallow (API 23)+ |
+| RAM | 2 GB (nyaman 3 GB+) |
+| Ruang kosong | ±500 MB |
+| Chipset | Entry-level apa pun (2017+) |
+
+Aplikasi ringan — proses berat seperti analisis AI foto dijalankan di server, bukan di HP. Foto juga dikompres sebelum disimpan, jadi pemakaian ruang tetap rendah. Spek di atas pas dengan HP kelas 1–1,5 jutaan di pasaran Indonesia, cocok untuk petugas lapangan.
+
+---
+
 ## Cara pakai
 
 1. Buka aplikasi, lalu isi nama petugas dan perusahaan.
