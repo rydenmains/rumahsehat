@@ -1,138 +1,190 @@
 package com.rumahsehat.ui
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.view.animation.LinearInterpolator
-import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.rumahsehat.R
-import com.rumahsehat.databinding.ActivityMainBinding
-import java.util.Calendar
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.livedata.observeAsState
+import com.rumahsehat.data.model.Assessment
+import com.rumahsehat.ui.components.RSBottomNavBar
+import com.rumahsehat.ui.components.RSTab
+import com.rumahsehat.ui.home.HomeScreen
+import com.rumahsehat.ui.home.SavedAssessmentUi
+import com.rumahsehat.ui.home.SyncStatusUi
+import com.rumahsehat.ui.history.HistoryScreen
+import com.rumahsehat.ui.inspection.InspectionFormScreen
+import com.rumahsehat.ui.theme.Background
+import com.rumahsehat.ui.theme.OnPrimary
+import com.rumahsehat.ui.theme.OnSurfaceVariant
+import com.rumahsehat.ui.theme.Primary
+import com.rumahsehat.ui.theme.RumahSehatTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
+class MainActivity : ComponentActivity() {
     private val viewModel: AssessmentViewModel by viewModels()
-    private var syncSpin: ValueAnimator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        val adapter = AssessmentAdapter({ assessmentId ->
-            ReviewActivity.start(this, assessmentId)
-        })
-        binding.historyContent.rvAssessments.layoutManager = LinearLayoutManager(this)
-        binding.historyContent.rvAssessments.adapter = adapter
-
-        // Setup Home Content Actions
-        binding.homeContent.btnStartNew.setOnClickListener {
-            startActivity(Intent(this, AssessmentActivity::class.java))
-        }
-        binding.homeContent.btnSyncNow.setOnClickListener {
-            viewModel.syncNow()
-        }
-        binding.homeContent.btnViewHistory.setOnClickListener {
-            switchToTab(R.id.nav_history)
-        }
-
-        binding.homeContent.tvGreeting.setText(greetingForHour(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)))
-
-        // Setup History Content Actions
-        binding.historyContent.btnSyncAllHistory.setOnClickListener {
-            viewModel.syncNow()
-        }
-
-        // Setup Bottom Nav Actions
-        binding.bottomNav.navHome.setOnClickListener { switchToTab(R.id.nav_home) }
-        binding.bottomNav.navInspect.setOnClickListener { 
-            startActivity(Intent(this, AssessmentActivity::class.java)) 
-        }
-        binding.bottomNav.navHistory.setOnClickListener { switchToTab(R.id.nav_history) }
-
-        // Initial Tab Selection
-        switchToTab(R.id.nav_home)
-
-        viewModel.isSyncing.observe(this) { syncing ->
-            binding.homeContent.btnSyncNow.isEnabled = !syncing
-            binding.homeContent.btnSyncNow.text = getString(if (syncing) R.string.sync_in_progress else R.string.sync_now)
-            if (syncing) startSyncSpin() else stopSyncSpin()
-        }
-
-        viewModel.syncMessage.observe(this) { msg ->
-            if (msg != null) {
-                Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
-            }
-        }
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNav.root) { v, insets ->
-            v.setPadding(0, 0, 0, insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom)
-            insets
-        }
-
-        viewModel.allAssessments.observe(this) { assessments ->
-            adapter.submitList(assessments)
-            binding.historyContent.llEmpty.visibility =
-                if (assessments.isEmpty()) View.VISIBLE else View.GONE
-
-            val pending = assessments.count { it.syncStatus != "SYNCED" }
-            binding.homeContent.llSyncBanner.visibility =
-                if (pending == 0) View.GONE else View.VISIBLE
-            binding.homeContent.tvPendingInfo.text = getString(R.string.pending_info, pending)
-            binding.homeContent.tvTodayCompleted.text = assessments.count { it.syncStatus == "SYNCED" }.toString()
-            binding.homeContent.tvTodayPending.text = pending.toString()
-        }
-    }
-
-    private fun greetingForHour(hour: Int): Int = when (hour) {
-        in 5..10 -> R.string.greeting_morning
-        in 11..14 -> R.string.greeting_afternoon
-        in 15..17 -> R.string.greeting_evening
-        else -> R.string.greeting_night
-    }
-
-    private fun switchToTab(tabId: Int) {
-        // Reset selections
-        binding.bottomNav.navHome.isSelected = false
-        binding.bottomNav.navInspect.isSelected = false
-        binding.bottomNav.navHistory.isSelected = false
-
-        when (tabId) {
-            R.id.nav_home -> {
-                binding.bottomNav.navHome.isSelected = true
-                binding.scrollHome.visibility = View.VISIBLE
-                binding.scrollHistory.visibility = View.GONE
-            }
-            R.id.nav_history -> {
-                binding.bottomNav.navHistory.isSelected = true
-                binding.scrollHome.visibility = View.GONE
-                binding.scrollHistory.visibility = View.VISIBLE
+        enableEdgeToEdge()
+        window.isNavigationBarContrastEnforced = false
+        setContent {
+            RumahSehatTheme {
+                SplashGate {
+                    AppShell(viewModel)
+                }
             }
         }
     }
+}
 
-    private fun startSyncSpin() {
-        if (syncSpin != null) return
-        val icon = binding.homeContent.ivSyncIcon
-        val animator = ObjectAnimator.ofFloat(icon, "rotation", 0f, 360f).apply {
-            duration = 1000
-            repeatCount = ValueAnimator.INFINITE
-            interpolator = LinearInterpolator()
-            start()
+@Composable
+fun SplashGate(content: @Composable () -> Unit) {
+    var splashDone by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { delay(1600); splashDone = true }
+    Crossfade(targetState = splashDone, animationSpec = tween(500)) { done ->
+        if (done) content() else SplashScreen()
+    }
+}
+
+@Composable
+fun SplashScreen(modifier: Modifier = Modifier) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+    val scale by animateFloatAsState(
+        targetValue = if (visible) 1f else 0.6f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "splashScale"
+    )
+    Box(
+        modifier = modifier.fillMaxSize().background(Color(0xFFE3F2EA)),
+        contentAlignment = Alignment.Center
+    ) {
+        AnimatedVisibility(visible, enter = fadeIn(tween(500))) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(96.dp)
+                        .scale(scale)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.Home,
+                        contentDescription = null,
+                        tint = OnPrimary,
+                        modifier = Modifier.size(52.dp)
+                    )
+                }
+                Spacer(Modifier.height(20.dp))
+                Text("Rumah Sehat", style = MaterialTheme.typography.headlineMedium, color = Primary)
+                Spacer(Modifier.height(48.dp))
+                CircularProgressIndicator(
+                    color = Primary,
+                    strokeWidth = 3.dp,
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(Modifier.height(12.dp))
+                Text("Menyiapkan...", style = MaterialTheme.typography.labelMedium, color = OnSurfaceVariant)
+            }
         }
-        syncSpin = animator
+    }
+}
+
+@Composable
+fun AppShell(viewModel: AssessmentViewModel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var currentTab by remember { mutableStateOf(RSTab.BERANDA) }
+    val assessments by viewModel.allAssessments.observeAsState(emptyList())
+    val isSyncing by viewModel.isSyncing.observeAsState(false)
+
+    val pendingCount = assessments.count { it.syncStatus != "SYNCED" }
+    val saved = assessments.map { it.toSavedAssessmentUi() }
+
+    val onOpenAssessment: (String) -> Unit = { id ->
+        context.startActivity(Intent(context, ReviewActivity::class.java).putExtra(ReviewActivity.EXTRA_ID, id))
     }
 
-    private fun stopSyncSpin() {
-        syncSpin?.cancel()
-        binding.homeContent.ivSyncIcon.rotation = 0f
-        syncSpin = null
+    if (currentTab == RSTab.INSPEKSI) {
+        InspectionFormScreen(
+            viewModel = viewModel,
+            onBack = { currentTab = RSTab.BERANDA },
+            onFinish = { currentTab = RSTab.RIWAYAT },
+            modifier = Modifier.fillMaxSize()
+        )
+        return
     }
+
+    Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
+        bottomBar = {
+            RSBottomNavBar(current = currentTab, onSelect = { currentTab = it })
+        }
+    ) { padding ->
+        Crossfade(targetState = currentTab, animationSpec = tween(250), label = "tab") { tab ->
+            when (tab) {
+                RSTab.BERANDA -> HomeScreen(
+                    pendingCount = pendingCount,
+                    isSyncing = isSyncing,
+                    savedAssessments = saved,
+                    onStartAssessment = { currentTab = RSTab.INSPEKSI },
+                    onSyncNow = { viewModel.syncNow() },
+                    onOpenHistory = { currentTab = RSTab.RIWAYAT },
+                    onOpenAssessment = onOpenAssessment,
+                    modifier = Modifier.fillMaxSize().padding(padding)
+                )
+
+                RSTab.INSPEKSI -> {}
+
+                RSTab.RIWAYAT -> HistoryScreen(
+                    assessments = saved,
+                    onOpenAssessment = onOpenAssessment,
+                    modifier = Modifier.fillMaxSize().padding(padding)
+                )
+            }
+        }
+    }
+}
+
+private fun Assessment.toSavedAssessmentUi(): SavedAssessmentUi {
+    val date = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(createdAt))
+    return SavedAssessmentUi(
+        id = id,
+        companyName = company,
+        assessorName = assessorId,
+        date = date,
+        syncStatus = if (syncStatus == "SYNCED") SyncStatusUi.TERKIRIM else SyncStatusUi.MENUNGGU_KIRIM
+    )
 }

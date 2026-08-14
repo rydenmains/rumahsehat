@@ -9,6 +9,7 @@ import com.rumahsehat.data.model.FormItemsProvider
 import com.rumahsehat.data.model.ScoreItem
 import com.rumahsehat.data.repository.AssessmentRepository
 import com.rumahsehat.domain.AssessmentCalculator
+import com.rumahsehat.ui.inspection.AllFormQuestions
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,18 +58,6 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
     fun photoPath(section: String): String? = photoPaths[section]
 
     fun missingPhotos(): List<String> = photoKeys.filter { it !in photoPaths }
-
-    companion object {
-        // Nama bagian foto: Rumah, Sanitasi, Perilaku (dapur/SPAL)
-        val photoKeys = listOf("house_front", "sanitation", "kitchen_spal")
-
-        /** Konversi id item (1.1, 2.3, ...) ke kunci bagian foto. */
-        fun photoKeyFor(itemId: String): String = when (itemId.substringBefore('.')) {
-            "1" -> photoKeys[0]
-            "2" -> photoKeys[1]
-            else -> photoKeys[2]
-        }
-    }
 
     fun loadReview(id: String) {
         viewModelScope.launch {
@@ -131,6 +120,90 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
                 // Offline-first: gagal kirim = tetap PENDING, dicoba ulang oleh SyncWorker.
                 repository.syncPending()
             }
+        }
+    }
+
+    /** Versi untuk UI Compose: pilihan jawaban dipegang map id->index di screen. */
+    fun saveAssessmentFromCompose(
+        assessorName: String,
+        company: String,
+        selections: Map<String, Int>,
+        notes: Map<String, String>
+    ) {
+        viewModelScope.launch {
+            val formItems = FormItemsProvider.getFormItems()
+            val scoreItems = formItems.map { item ->
+                val optionIndex = selections[item.id] ?: -1
+                ScoreItem(
+                    assessmentId = "",
+                    itemId = item.id,
+                    score = if (optionIndex >= 0) item.scoreForOption(optionIndex) else 0,
+                    isApplicable = true,
+                    optionIndex = optionIndex,
+                    reason = notes[item.id]
+                )
+            }
+
+            val calcResult = AssessmentCalculator.calculate(scoreItems, weights)
+            val assessmentId = "ASM-${System.currentTimeMillis()}"
+            val photoPathsSnapshot = photoPaths.toMap()
+
+            val assessment = Assessment(
+                id = assessmentId,
+                company = company,
+                assessorId = assessorName,
+                createdAt = System.currentTimeMillis(),
+                totalAchieved = calcResult.totalAchieved,
+                totalApplicable = calcResult.totalApplicable,
+                percentage = calcResult.percentage,
+                isHealthy = calcResult.isHealthy,
+                syncStatus = "PENDING",
+                photoPathsJson = photoPathsSnapshot.entries.joinToString(";") { "${it.key}=${it.value}" }
+            )
+
+            withContext(NonCancellable) {
+                repository.insert(assessment, scoreItems.map { it.copy(assessmentId = assessmentId) })
+                repository.syncPending()
+            }
+        }
+    }
+
+    /** Validasi untuk UI Compose: kembalikan list pesan masalah, kosong = siap simpan. */
+    fun validationIssues(
+        assessorName: String,
+        company: String,
+        selections: Map<String, Int>,
+        photos: Map<String, String?>
+    ): List<String> {
+        val issues = mutableListOf<String>()
+        val parts = mutableListOf<String>()
+        if (assessorName.isBlank()) parts.add("Nama Petugas")
+        if (company.isBlank()) parts.add("Asal Kader / Instansi")
+        if (parts.isNotEmpty()) issues.add("Identitas Petugas belum lengkap: " + parts.joinToString(", "))
+
+        val missingItems = AllFormQuestionIds.filter { selections[it] == null }
+        if (missingItems.isNotEmpty()) {
+            issues.add("Masih ada ${missingItems.size} soal yang belum dijawab")
+        }
+
+        val missingPhotos = photoKeys.filter { photos[it] == null }
+        if (missingPhotos.isNotEmpty()) {
+            issues.add("Masih ada ${missingPhotos.size} dari 3 foto yang belum diambil")
+        }
+        return issues
+    }
+
+    companion object {
+        val AllFormQuestionIds = AllFormQuestions.map { it.id }
+
+        // Nama bagian foto: Rumah, Sanitasi, Perilaku (dapur/SPAL)
+        val photoKeys = listOf("house_front", "sanitation", "kitchen_spal")
+
+        /** Konversi id item (1.1, 2.3, ...) ke kunci bagian foto. */
+        fun photoKeyFor(itemId: String): String = when (itemId.substringBefore('.')) {
+            "1" -> photoKeys[0]
+            "2" -> photoKeys[1]
+            else -> photoKeys[2]
         }
     }
 }

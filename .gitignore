@@ -29,3 +29,11 @@ backend/plan.md
 /skills-lock.json
 /git_history.txt
 
+
+# Internal analysis / token-tracking (jangan di-commit)
+/finale.md
+/freeze.md
+/reminder-token.md
+/tokendiag.md
+/tokendump.py
+/skill-observations/
