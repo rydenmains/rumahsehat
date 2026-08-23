@@ -13,12 +13,16 @@ val localProps = Properties().apply {
 }
 
 // Kredensial diambil dari ENV / local.properties (keduanya tidak masuk git).
-// Tanpa password, release build tetap jalan dengan debug key (untuk CI/F-Droid).
+// Release build WAJIB gagal kalau password keystore tidak tersedia (tidak ada fallback debug key).
 val keystorePassword = System.getenv("RS_KEYSTORE_PASSWORD")
     ?: localProps.getProperty("keystore.password")
 val apiToken = System.getenv("RS_API_TOKEN")
     ?: localProps.getProperty("api.token")
     ?: "".also { println("WARNING: RS_API_TOKEN/api.token kosong — sinkronisasi backend akan ditolak.") }
+// DSN Sentry opsional. Kosong = crash reporter mati (no-op), app tetap jalan normal.
+val sentryDsn = System.getenv("SENTRY_DSN")
+    ?: localProps.getProperty("sentry.dsn")
+    ?: ""
 
 android {
     namespace = "com.rumahsehat"
@@ -37,6 +41,7 @@ android {
         }
 
         buildConfigField("String", "API_TOKEN", "\"$apiToken\"")
+        buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
     }
 
     signingConfigs {
@@ -120,6 +125,9 @@ dependencies {
 
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
+
+    // Crash reporting (aktif hanya kalau SENTRY_DSN diisi)
+    implementation(libs.sentry.android)
 
     // Lifecycle
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

@@ -8,11 +8,15 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.rumahsehat.sync.SyncWorker
+import io.sentry.android.core.SentryAndroid
 import java.util.concurrent.TimeUnit
 
 class RumahSehatApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        if (BuildConfig.SENTRY_DSN.isNotEmpty()) {
+            SentryAndroid.init(this) { options -> options.dsn = BuildConfig.SENTRY_DSN }
+        }
         // Retry kirim penilaian yang masih PENDING tiap aplikasi dibuka.
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
