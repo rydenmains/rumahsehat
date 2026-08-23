@@ -14,15 +14,15 @@ local.properties
 *.apk
 /rumahsehat-upload.keystore
 /prototype/
-/nextplan.md
 
-# Planning docs — sengaja TIDAK di-commit (aturan proyek)
-planbackend.md
-/plan.md
-backend/plan.md
-/cleaningplan.md
-/journey.md
-/rumahsehat.md
+# Planning docs — sengaja TIDAK di-commit (aturan proyek), sekarang di docs/
+/docs/planning/
+/docs/backend/plan.md
+/docs/architecture/journey.md
+/docs/architecture/finale.md
+/docs/architecture/freeze.md
+/docs/design/rumahsehat.md
+/docs-structure-proposal.md
 
 # Tooling lokal (opencode / dev)
 /.agents/
@@ -31,9 +31,7 @@ backend/plan.md
 
 
 # Internal analysis / token-tracking (jangan di-commit)
-/finale.md
-/freeze.md
-/reminder-token.md
-/tokendiag.md
+/docs/token/
+/docs/skills/
 /tokendump.py
 /skill-observations/

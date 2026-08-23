@@ -4,10 +4,10 @@ Aplikasi **Android** untuk penilaian kesehatan lingkungan rumah oleh petugas lap
 
 ## Pekerjaan kita (status saat ini)
 
-- **FASE FINALE** — penyelesaian/pemolesan, bukan fitur besar. Journey & keputusan di `journey.md` (entry 14-08-2026).
+- **FASE FINALE** — penyelesaian/pemolesan, bukan fitur besar. Journey & keputusan di `docs/architecture/journey.md` (entry 14-08-2026).
 - **v1.5.0 (rilis)**: redesign premium UI — font Plus Jakarta Sans, warna forest-green dipertajam, identitas petugas jadi halaman-0, tombol kamera bulat di bar bawah, kartu jawaban dirampingkan, splash + animasi sync halus.
 - **CI/CD**: `.github/workflows/android.yml` — build debug + unit test otomatis tiap push/PR; build release signed manual (secrets: `RS_KEYSTORE_BASE64`, `RS_KEYSTORE_PASSWORD`, `RS_API_TOKEN`).
-- **Backend**: Google Apps Script (`backend/Code.gs`) → Google Sheets. Idempotensi anti-duplikat, analisis AI foto rumah, log persisten ke tab "Logs". Rencana di `planbackend.md` & `backend/plan.md` (tidak di-commit).
+- **Backend**: Google Apps Script (`backend/Code.gs`) → Google Sheets. Idempotensi anti-duplikat, analisis AI foto rumah, log persisten ke tab "Logs". Rencana di `docs/planning/planbackend.md` & `docs/backend/plan.md` (tidak di-commit).
 
 ## Stack
 
@@ -27,17 +27,19 @@ Hasil: `app\build\outputs\apk\user\release\`.
 ## Struktur
 
 - `app/` — source Android.
-- `backend/` — Apps Script server (Code.gs + plan).
+- `backend/` — Apps Script server (Code.gs).
 - `prototype/` — mockup desain.
-- `nextplan.md`, `planbackend.md`, `backend/plan.md` — dokumen plan (sengaja TIDAK di-commit).
+- `docs/` — dokumentasi (landing site GitHub Pages + dokumen internal terstruktur).
+- `docs/architecture/journey.md`, `docs/planning/nextplan.md`, `docs/planning/planbackend.md`, `docs/backend/plan.md` — dokumen plan (sengaja TIDAK di-commit).
 
 ## Skill yang relevan
 
 UI/UX di proyek Android ini → `android-mobile-frontend-design`, `android-material3-design-system`, `android-viewsystem-foundations`, `android-ui-states-validation`. Untuk mockup visual → `imagegen-frontend-mobile`. Skill frontend-web (Next.js, design-taste-frontend, dll.) tidak berlaku.
+Audit skill usage: `docs/skills/allskills.md`.
 
 ## Hemat token (PENTING)
 
-Cache gateway free (`opencode/*:free`) ga dipangkas → tiap balasan baca ulang seluruh konteks (±1M token/balasan). Detail: `reminder-token.md`. Aturan:
+Cache gateway free (`opencode/*:free`) ga dipangkas → tiap balasan baca ulang seluruh konteks (±1M token/balasan). Detail: `docs/token/reminder-token.md`. Aturan:
 
 - STOP & `/new` di **balasan ke-20** (hard stop ke-30).
 - Ganti task = langsung `/new`.
