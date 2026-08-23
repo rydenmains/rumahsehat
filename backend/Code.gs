@@ -8,10 +8,13 @@
  * - AI       : processPendingAi() dipanggil trigger tiap 10 menit → Gemini
  *              menganalisis 3 foto + jawaban, menulis 2 kolom hasil.
  *
- * TIDAK ADA kalkulator skor di backend. Status SEHAT/TIDAK ditentukan dari:
- *   1) Jawaban indikator (pilihan kata a/b/c)  → kolom 5..21
- *   2) Hasil analisis foto oleh Gemini         → kolom 28..29
- * Total Skor (kolom 22) dikirim dari Android (summary.total_achieved).
+ * Validasi & skor OTORITATIF di server:
+ *   1) 17 jawaban divalidasi terhadap whitelist (P1-5) — payload di luar
+ *      schema ditolak 400.
+ *   2) Total Skor & Status Health dihitung ULANG server dari jawaban
+ *      (SCORING_RULES mirror AssessmentCalculator.kt) — summary client
+ *      DIABAIKAN (P1-6/P1-7). AI hanya menerima data hasil normalisasi ini
+ *      (P1-9, via rowAnswers saat processPendingAi).
  * ==============================================================================
  */
 
@@ -153,6 +156,21 @@ function doPost(e) {
       return createJsonResponse({ status: "FORBIDDEN", message: "Token tidak valid." }, 403);
     }
 
+    // --- VALIDASI SERVER-SIDE (P1-5): jangan percaya input client mentah ---
+    // Gagal validasi = tolak sebelum menyentuh Sheet/Drive (fail fast).
+    var a = payload.answers || payload.scores || {};
+    var validationErrors = validateAnswers(a);
+    if (validationErrors.length > 0) {
+      logToSheet("WARN", "doPost ditolak (jawaban tidak valid): " + validationErrors.join("; "));
+      return createJsonResponse({
+        status: "ERROR",
+        message: "Jawaban tidak valid: " + validationErrors.join("; ")
+      }, 400);
+    }
+
+    // Skor & status dihitung ULANG oleh server (P1-6/P1-7); summary client diabaikan.
+    var serverSummary = computeServerSummary(a);
+
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = setupEnvironment();
     if (!sheet) {
@@ -210,12 +228,10 @@ function doPost(e) {
       }
     }
 
-    // --- BACA 17 JAWABAN INDIKATOR (kata) DARI PAYLOAD ANDROID ---
-    var a = payload.answers || payload.scores || {};
+    // --- 17 JAWABAN SUDAH DIVALIDASI + SKOR DIHITUNG SERVER (di atas) ---
 
     var now = new Date();
     var formattedDate = Utilities.formatDate(now, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd HH:mm:ss");
-    var summary = payload.summary || {};
     var meta = payload.meta || {};
 
     var newRow = [
@@ -247,9 +263,9 @@ function doPost(e) {
       safeCell(a.buang_tinja_bayi !== undefined ? a.buang_tinja_bayi : "-"),
       safeCell(a.buang_sampah !== undefined ? a.buang_sampah : "-"),
 
-      // RINGKASAN & FOTO
-      safeCell(summary.total_achieved !== undefined ? summary.total_achieved : ""),
-      safeCell(summary.status || (summary.is_healthy ? "SEHAT" : "TIDAK SEHAT")),
+      // RINGKASAN — hasil hitung server (bukan summary client)
+      safeCell(serverSummary.total_achieved),
+      safeCell(serverSummary.status),
       safeCell(payload.notes || "-"),
       photoUrls[0], photoUrls[1], photoUrls[2],
 
@@ -442,7 +458,7 @@ function analyzeAssessmentWithGemini(photos, assessment) {
   var answersText = "";
   var answers = assessment.answers || {};
   Object.keys(answers).forEach(function (key) {
-    answersText += key + "=" + answers[key] + "; ";
+    answersText += key + "=" + sanitizeForPrompt(answers[key]) + "; ";
   });
 
   var prompt = [
@@ -674,6 +690,95 @@ function rowAnswers(row, headers) {
     }
   }
   return answers;
+}
+
+// ---------------------------------------------------------------------------
+// Validasi & skor otoritatif server — mirror AssessmentCalculator.kt +
+// FormItemsProvider.kt. Jangan ubah bobot di sini tanpa menyamakan Kotlin.
+// ---------------------------------------------------------------------------
+
+/** Item esensial = bobot >= nilai ini; SEHAT butuh semua esensial faktor penuh. */
+var ESSENTIAL_MIN_WEIGHT = 100;
+
+/** Bobot tiap indikator (= maxScore di FormItemsProvider.kt). */
+var SCORING_RULES = {
+  langit_langit: 20, dinding: 20, lantai: 20,
+  jendela_kamar: 20, jendela_rk: 20, ventilasi: 20,
+  lubang_asap: 20, pencahayaan: 20,
+  air_bersih: 150, jamban: 150, spal: 100, tempat_sampah: 150,
+  buka_jendela_kamar: 20, buka_jendela_rk: 20, bersih_rumah: 20,
+  buang_tinja_bayi: 20, buang_sampah: 20
+};
+
+/** Faktor huruf opsi → proporsi skor (a=0, b=0.5, c=1; d=1 khusus 3.4). */
+var ANSWER_FACTOR = { a: 0, b: 0.5, c: 1, d: 1 };
+
+/**
+ * Bersihkan teks jawaban sebelum masuk prompt AI (anti prompt-injection):
+ * buang newline/karakter kontrol (injeksi butuh baris baru), pembatas ";"
+ * diganti koma, dan panjang dicap 80 char.
+ * ponytail: cap 80 + strip newline mempersempit payload, bukan imun penuh;
+   vektor foto (teks di dalam gambar) tetap tak terbendung — ditutup oleh
+   flag-enum + JSON-only output di bawahnya.
+ */
+function sanitizeForPrompt(value) {
+  return String(value)
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .replace(/;/g, ",")
+    .substring(0, 80);
+}
+
+/**
+ * Validasi 17 jawaban dari client (P1-5): semua key whitelist harus ada dan
+ * nilainya label opsi berformat "a. teks" / "b" / ... atau "Tidak berlaku".
+ * Key di luar whitelist juga ditolak. Return array pesan error (kosong=valid).
+ */
+function validateAnswers(answers) {
+  var errors = [];
+  var a = answers || {};
+  for (var key in SCORING_RULES) {
+    var val = a[key];
+    if (val === undefined || val === null || String(val).trim() === "") {
+      errors.push(key + ": jawaban hilang");
+      continue;
+    }
+    var s = String(val).trim();
+    if (s === "Tidak berlaku") continue;
+    if (!/^([abcd])([.\s]|$)/i.test(s)) errors.push(key + ": format tidak dikenal");
+  }
+  for (var extra in a) {
+    if (!SCORING_RULES.hasOwnProperty(extra)) errors.push(extra + ": key tidak dikenal");
+  }
+  return errors;
+}
+
+/**
+ * Hitung skor & status dari jawaban yang SUDAH tervalidasi (P1-6).
+ * Mirror AssessmentCalculator.kt: total = Σ bobot×faktor; SEHAT hanya bila
+ * semua item esensial faktor penuh (=1). "Tidak berlaku" dilewati dari
+ * pembagi, sama seperti isApplicable=false di Android.
+ * ponytail: duplikasi aturan skor dgn Kotlin disengaja — Apps Script tak bisa
+   import Kotlin; sinkron manual, ada test backend/test_scoring.js.
+ */
+function computeServerSummary(answers) {
+  var achieved = 0, applicable = 0, essentialFailed = false;
+  for (var key in SCORING_RULES) {
+    var weight = SCORING_RULES[key];
+    var s = String(answers[key]).trim();
+    if (s === "Tidak berlaku") continue;
+    var m = s.match(/^([abcd])/i);
+    var factor = m ? ANSWER_FACTOR[m[1].toLowerCase()] : 0;
+    applicable += weight;
+    achieved += weight * factor;
+    if (weight >= ESSENTIAL_MIN_WEIGHT && factor < 1) essentialFailed = true;
+  }
+  var healthy = applicable > 0 && !essentialFailed;
+  return {
+    total_achieved: achieved,
+    total_applicable: applicable,
+    is_healthy: healthy,
+    status: healthy ? "SEHAT" : "TIDAK SEHAT"
+  };
 }
 
 function setupEnvironment() {
