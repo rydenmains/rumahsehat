@@ -373,9 +373,10 @@ function processPendingAi() {
 
     // BODYGUARD: AI bisa menurunkan verdict FINAL bila foto tidak mendukung SEHAT.
     // Petugas jawab SEHAT tapi foto jelas menunjukkan kondisi buruk → diturunkan.
+    // v1.7: map kenal KURANG SEHAT (QA-02) — SEHAT(0) < KURANG(1) < TIDAK(2).
     if (colHealth > 0) {
       var prevHealth = String(data[r][colHealth - 1] || "").toUpperCase();
-      var severity = { "SEHAT": 0, "PERLU PERBAIKAN": 1, "TIDAK SEHAT": 2 };
+      var severity = { "SEHAT": 0, "KURANG SEHAT": 1, "PERLU PERBAIKAN": 1, "TIDAK SEHAT": 2 };
       var aiSev = severity[result.flag];
       var prevSev = severity[prevHealth];
       if (aiSev !== undefined && prevSev !== undefined && aiSev > prevSev) {
