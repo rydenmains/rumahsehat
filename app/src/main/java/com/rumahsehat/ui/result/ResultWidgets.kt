@@ -37,7 +37,7 @@ fun ScoreRing(achieved: Int, max: Int, color: Color) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.size(140.dp)) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawArc(
-                color = Color(0xFFE0E3E3),
+                color = SurfaceVariant,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,

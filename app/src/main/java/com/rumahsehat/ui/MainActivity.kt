@@ -46,6 +46,7 @@ import com.rumahsehat.ui.theme.OnPrimary
 import com.rumahsehat.ui.theme.OnSurfaceVariant
 import com.rumahsehat.ui.theme.Primary
 import com.rumahsehat.ui.theme.RumahSehatTheme
+import com.rumahsehat.ui.theme.SplashMint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -88,7 +89,7 @@ fun SplashScreen(modifier: Modifier = Modifier) {
         label = "splashScale"
     )
     Box(
-        modifier = modifier.fillMaxSize().background(Color(0xFFE3F2EA)),
+        modifier = modifier.fillMaxSize().background(SplashMint),
         contentAlignment = Alignment.Center
     ) {
         AnimatedVisibility(visible, enter = fadeIn(tween(500))) {
