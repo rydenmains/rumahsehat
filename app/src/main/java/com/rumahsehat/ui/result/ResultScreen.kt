@@ -60,7 +60,7 @@ fun ResultScreen(
         ?: if (assessment?.isHealthy == true) HealthStatus.SEHAT.label else HealthStatus.TIDAK_SEHAT.label
     val style = when (HealthStatus.fromLabel(label)) {
         HealthStatus.SEHAT -> ResultStyle(
-            StatusSehat, Color(0xFFE2EFE3), Icons.Filled.Check,
+            StatusSehat, StatusSehatContainer, Icons.Filled.Check,
             "Rumah Sehat", "Rumah Anda dalam kondisi baik dan layak huni."
         )
         HealthStatus.KURANG_SEHAT -> ResultStyle(
@@ -68,7 +68,7 @@ fun ResultScreen(
             "Kurang Sehat", "Beberapa kriteria belum terpenuhi."
         )
         HealthStatus.TIDAK_SEHAT -> ResultStyle(
-            StatusTidakSehat, Color(0xFFF9DEDC), Icons.Filled.Close,
+            StatusTidakSehat, StatusTidakSehatContainer, Icons.Filled.Close,
             "Tidak Sehat", "Banyak kriteria belum terpenuhi."
         )
     }
