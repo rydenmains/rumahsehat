@@ -35,3 +35,4 @@ local.properties
 /docs/skills/
 /tokendump.py
 /skill-observations/
+.gstack/
