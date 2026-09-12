@@ -26,9 +26,11 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.rumahsehat.R
 import com.rumahsehat.data.model.FormItemsProvider
 import com.rumahsehat.data.model.ScoreItem
 import com.rumahsehat.domain.HealthStatus
@@ -61,15 +63,15 @@ fun ResultScreen(
     val style = when (HealthStatus.fromLabel(label)) {
         HealthStatus.SEHAT -> ResultStyle(
             StatusSehat, StatusSehatContainer, Icons.Filled.Check,
-            "Rumah Sehat", "Rumah Anda dalam kondisi baik dan layak huni."
+            "Rumah Sehat", stringResource(R.string.result_msg_sehat)
         )
         HealthStatus.KURANG_SEHAT -> ResultStyle(
             StatusKurang, StatusKurangContainer, Icons.Filled.PriorityHigh,
-            "Kurang Sehat", "Beberapa kriteria belum terpenuhi."
+            "Kurang Sehat", stringResource(R.string.result_msg_kurang)
         )
         HealthStatus.TIDAK_SEHAT -> ResultStyle(
             StatusTidakSehat, StatusTidakSehatContainer, Icons.Filled.Close,
-            "Tidak Sehat", "Banyak kriteria belum terpenuhi."
+            "Tidak Sehat", stringResource(R.string.result_msg_tidak)
         )
     }
 
@@ -95,7 +97,7 @@ fun ResultScreen(
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
-                title = { Text("Hasil Penilaian", style = MaterialTheme.typography.headlineSmall) },
+                title = { Text(stringResource(R.string.result_title), style = MaterialTheme.typography.headlineSmall) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Kembali")
@@ -145,7 +147,7 @@ fun ResultScreen(
                         ScoreRing(achieved = achieved, max = applicable, color = style.main)
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            "$fulfilled dari ${formItems.size} indikator terpenuhi",
+                            stringResource(R.string.result_fulfilled, fulfilled, formItems.size),
                             style = MaterialTheme.typography.bodyLarge,
                             color = OnSurface
                         )
@@ -160,7 +162,7 @@ fun ResultScreen(
                         if ((assessment?.totalApplicable ?: 0) == 0) {
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                "Data belum lengkap — dilengkapi dulu sebelum dinilai akhir.",
+                                stringResource(R.string.result_invalid_note),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = OnSurfaceVariant
                             )
@@ -171,7 +173,7 @@ fun ResultScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Primary)
                         ) {
-                            Text("Lihat Detail Penilaian")
+                            Text(stringResource(R.string.result_detail))
                         }
                     }
                 }
@@ -179,7 +181,7 @@ fun ResultScreen(
 
             item {
                 Text(
-                    "Rincian per kelompok",
+                    stringResource(R.string.result_breakdown),
                     style = MaterialTheme.typography.titleMedium,
                     color = OnSurface,
                     modifier = Modifier.fillMaxWidth()
