@@ -9,7 +9,6 @@ import com.rumahsehat.data.model.FormItemsProvider
 import com.rumahsehat.data.model.ScoreItem
 import com.rumahsehat.data.repository.AssessmentRepository
 import com.rumahsehat.domain.AssessmentCalculator
-import com.rumahsehat.domain.AssessmentCalculator
 import com.rumahsehat.ui.inspection.AllFormQuestions
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
@@ -34,9 +33,6 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
         _lastSavedId.value = null
     }
 
-    /** Status foto per section; observe oleh fragment untuk refresh hint. */
-    val photoPathsLive: LiveData<Map<String, String>> get() = _photoPaths
-
     // Identitas dari halaman-0 (dipakai subtitle AppBar + saat simpan).
     var assessorName: String = ""
     var companyName: String = ""
@@ -58,7 +54,6 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
 
     fun markPhotoTaken(section: String, path: String) {
         photoPaths[section] = path
-        _photoPaths.value = photoPaths.toMap()
     }
 
     fun isPhotoTaken(section: String): Boolean = photoPaths.containsKey(section)
