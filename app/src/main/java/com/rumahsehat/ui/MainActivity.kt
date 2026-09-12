@@ -1,6 +1,7 @@
 package com.rumahsehat.ui
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -59,7 +60,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        window.isNavigationBarContrastEnforced = false
+        // ponytail: API 29+ only, crash NoSuchMethod di 8.x (Oppo 8.1 / J4+ 8.0)
+        if (Build.VERSION.SDK_INT >= 29) {
+            window.isNavigationBarContrastEnforced = false
+        }
         setContent {
             RumahSehatTheme {
                 SplashGate {
