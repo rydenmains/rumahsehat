@@ -50,9 +50,11 @@ fun InspectionFormScreen(
     val question = if (isIdentity) null else questions[current - 1]
 
     // v1.7: setelah simpan sukses → buka ResultActivity untuk assessment baru.
+    // consumeLastSavedId = one-shot (QA-01): nilai lama tidak memicu Result saat form dibuka ulang.
     val lastSavedId by viewModel.lastSavedId.observeAsState()
     LaunchedEffect(lastSavedId) {
         lastSavedId?.let { id ->
+            viewModel.consumeLastSavedId()
             com.rumahsehat.ui.result.ResultActivity.start(context, id)
             onFinish()
         }

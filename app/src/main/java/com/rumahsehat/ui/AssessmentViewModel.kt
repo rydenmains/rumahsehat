@@ -29,6 +29,11 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
     private val _lastSavedId = MutableLiveData<String?>()
     val lastSavedId: LiveData<String?> get() = _lastSavedId
 
+    /** Konsumsi event navigasi hasil (one-shot): cegah auto-buka Result lama saat form dibuka ulang. */
+    fun consumeLastSavedId() {
+        _lastSavedId.value = null
+    }
+
     /** Status foto per section; observe oleh fragment untuk refresh hint. */
     val photoPathsLive: LiveData<Map<String, String>> get() = _photoPaths
 
