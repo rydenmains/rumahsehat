@@ -18,6 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.res.stringResource
+import com.rumahsehat.R
 import com.rumahsehat.data.model.FormItemsProvider
 import com.rumahsehat.data.model.ScoreItem
 import com.rumahsehat.ui.theme.Background
@@ -69,7 +71,7 @@ fun ReviewScreen(viewModel: AssessmentViewModel, onBack: () -> Unit) {
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
-                title = { Text("Detail Penilaian", style = MaterialTheme.typography.headlineSmall) },
+                title = { Text(stringResource(R.string.review_detail_title), style = MaterialTheme.typography.headlineSmall) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Kembali")
@@ -123,7 +125,7 @@ fun ScoreRow(item: ScoreItem, answerLabel: String?) {
             }
             Spacer(Modifier.height(4.dp))
             Text(
-                answerLabel ?: "Tidak berlaku",
+                answerLabel ?: stringResource(R.string.item_not_applicable),
                 style = MaterialTheme.typography.bodyMedium,
                 color = OnSurface
             )

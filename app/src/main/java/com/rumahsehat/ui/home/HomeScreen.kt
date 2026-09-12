@@ -27,6 +27,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.rumahsehat.R
 import com.rumahsehat.ui.components.EmptyState
 import com.rumahsehat.ui.theme.*
 import java.util.Calendar
@@ -219,7 +221,7 @@ private fun SyncBanner(pendingCount: Int, isSyncing: Boolean, onSyncNow: () -> U
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Status Sinkronisasi", style = MaterialTheme.typography.titleSmall, color = OnSurface)
+                Text(stringResource(R.string.sync_banner_title), style = MaterialTheme.typography.titleSmall, color = OnSurface)
                 Text(
                     when {
                         isSyncing -> "Mengirim ke pusat data..."
@@ -232,7 +234,7 @@ private fun SyncBanner(pendingCount: Int, isSyncing: Boolean, onSyncNow: () -> U
             }
             if (!isSyncing && pendingCount > 0) {
                 TextButton(onClick = onSyncNow) {
-                    Text("Kirim Sekarang", color = Primary, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.sync_now), color = Primary, fontWeight = FontWeight.SemiBold)
                 }
             }
         }

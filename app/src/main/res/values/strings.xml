@@ -121,6 +121,13 @@
     <string name="result_msg_tidak">Banyak kriteria belum terpenuhi.</string>
     <string name="result_detail">Lihat Detail Penilaian</string>
     <string name="result_breakdown">Rincian per kelompok</string>
+
+    <!-- Formulir inspeksi -->
+    <string name="form_title">Formulir Inspeksi</string>
+    <string name="identity_subtitle">Identitas Petugas</string>
+    <string name="issues_title">Periksa Kembali</string>
+    <string name="confirm_identity_fmt">Petugas: %1$s\nInstansi: %2$s</string>
+    <string name="review_detail_title">Detail Penilaian</string>
     <string name="result_invalid_note">Data belum lengkap — dilengkapi dulu sebelum dinilai akhir.</string>
 
     <!-- Bottom navigation -->

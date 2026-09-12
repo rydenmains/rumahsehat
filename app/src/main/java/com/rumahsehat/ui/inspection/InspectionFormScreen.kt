@@ -20,6 +20,8 @@ import com.rumahsehat.ui.components.FormStepper
 import com.rumahsehat.ui.components.IdentityStepCard
 import com.rumahsehat.ui.components.PhotoUploadCard
 import com.rumahsehat.ui.components.QuestionCard
+import androidx.compose.ui.res.stringResource
+import com.rumahsehat.R
 import com.rumahsehat.ui.theme.Background
 import java.io.File
 
@@ -105,9 +107,9 @@ fun InspectionFormScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Formulir Inspeksi", style = MaterialTheme.typography.headlineSmall)
+                        Text(stringResource(R.string.form_title), style = MaterialTheme.typography.headlineSmall)
                         Text(
-                            if (isIdentity) "Identitas Petugas"
+                            if (isIdentity) stringResource(R.string.identity_subtitle)
                             else "Tahap ${section!!.stepNumber} dari 3 - ${section.title}",
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -195,11 +197,11 @@ fun InspectionFormScreen(
     if (showIssues) {
         AlertDialog(
             onDismissRequest = { showIssues = false },
-            title = { Text("Periksa Kembali") },
+            title = { Text(stringResource(R.string.issues_title)) },
             text = { Text(issuesMessage) },
             confirmButton = {
                 TextButton(onClick = { showIssues = false }) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         )
@@ -210,16 +212,11 @@ fun InspectionFormScreen(
         val photoCount = photos.values.count { it != null }
         AlertDialog(
             onDismissRequest = { showConfirm = false },
-            title = { Text("Kirim Penilaian?") },
+            title = { Text(stringResource(R.string.confirm_save_title)) },
             text = {
                 Text(
-                    buildString {
-                        append("Petugas: ").append(petugasName.ifBlank { "-" })
-                        append("\nInstansi: ").append(instansi.ifBlank { "-" })
-                        append("\n\n").append("$answered/$total soal terjawab")
-                        append("\n$photoCount/3 foto lengkap")
-                        append("\n\nData akan dikirim ke server. Setelah dikirim, penilaian ini tidak bisa diubah.")
-                    }
+                    stringResource(R.string.confirm_identity_fmt, petugasName.ifBlank { "-" }, instansi.ifBlank { "-" }) +
+                        "\n\n" + stringResource(R.string.confirm_save_message, answered, total, photoCount, 3)
                 )
             },
             confirmButton = {
@@ -227,12 +224,12 @@ fun InspectionFormScreen(
                     showConfirm = false
                     viewModel.saveAssessmentFromCompose(petugasName, instansi, selections, notes)
                 }) {
-                    Text("Simpan & Kirim")
+                    Text(stringResource(R.string.save_assessment))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showConfirm = false }) {
-                    Text("Kembali")
+                    Text(stringResource(R.string.back))
                 }
             }
         )
