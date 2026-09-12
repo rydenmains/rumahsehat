@@ -252,7 +252,11 @@ fun AssessmentCard(item: SavedAssessmentUi, onClick: () -> Unit) {
             Spacer(Modifier.height(2.dp))
             Text("${item.assessorName} · ${item.date}", style = MaterialTheme.typography.bodyMedium, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+            Row(
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 val (label, color) = when (item.syncStatus) {
                     SyncStatusUi.TERKIRIM -> "Terkirim" to StatusSehat
                     SyncStatusUi.MENUNGGU_KIRIM -> "Menunggu Kirim" to StatusPending
