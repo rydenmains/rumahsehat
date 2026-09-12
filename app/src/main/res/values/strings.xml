@@ -122,8 +122,6 @@
     <string name="result_detail">Lihat Detail Penilaian</string>
     <string name="result_breakdown">Rincian per kelompok</string>
     <string name="result_invalid_note">Data belum lengkap — dilengkapi dulu sebelum dinilai akhir.</string>
-    <string name="review_items_title">Hasil Per Item</string>
-    <string name="item_not_applicable">Tidak Berlaku</string>
 
     <!-- Bottom navigation -->
     <string name="nav_home">Beranda</string>
