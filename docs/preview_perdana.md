@@ -28,3 +28,10 @@
 ## Belum masuk rilis
 - Fitur galeri (Photo Picker + fallback GetContent) masih uncommitted.
 - File dump `*.xml/log` + `adb_dev.txt` dkk. belum dibersihkan.
+
+## Uji E2E data real (12-09-2026 malam, emulator API 35, build 1.7.1-user)
+- Alur penuh via uiautomator: identitas → 17/17 soal → 3/3 foto (galeri) → Simpan & Kirim.
+- Hasil: TIDAK SEHAT, 115/810, `ASM-1789230438778` tersimpan di Room.
+- Sync backend: PENDING → SYNCED setelah internet emulator dipulihkan (monkey sempat nyalakan mode pesawat).
+- Sentry: `captureMessage("RS real save ...")` terkirim dari save asli (bukan smoke) — cek di dashboard Issues. Kode test sudah revert.
+- Root bersih: 98 file dump/log dihapus.
