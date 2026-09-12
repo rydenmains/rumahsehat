@@ -17,6 +17,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RumahSehat">
 
+        <meta-data
+            android:name="io.sentry.auto-init"
+            android:value="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

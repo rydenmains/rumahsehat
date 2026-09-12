@@ -17,7 +17,7 @@ import java.net.URL
  */
 object AssessmentSync {
     const val SERVER_URL =
-        "https://script.google.com/macros/s/AKfycbzgu7bWA9KHzRNDkYf1i8ZQBRSR9lchTnHOx34FmAa73YYR7CD5keHQ_mqEnqB4RecXjQ/exec"
+        "https://script.google.com/macros/s/AKfycbx1EnBzhinuf6nPtfYkKXIxeEo6RbvbQyNuO8jWk4EYOspjfBm-KAJG8XPXWakMlvqWuA/exec"
 
     suspend fun push(dao: AssessmentDao, assessment: Assessment, items: List<ScoreItem>): Boolean =
         withContext(Dispatchers.IO) {
