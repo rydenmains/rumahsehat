@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.appdistribution)
 }
 
 import java.util.Properties
@@ -35,7 +36,7 @@ android {
         versionCode = 11
         versionName = "1.7.1"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
         }
@@ -147,4 +148,14 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+}
+
+// App Distribution: kredensial via GOOGLE_APPLICATION_CREDENTIALS (CI secret),
+// App ID via FIREBASE_APP_ID (env) / firebase.appId (local.properties, tidak masuk git).
+configure<com.google.firebase.appdistribution.gradle.AppDistributionExtension> {
+    (System.getenv("FIREBASE_APP_ID") ?: localProps.getProperty("firebase.appId") ?: "").takeIf { it.isNotEmpty() }?.let {
+        appId = it
+    }
+    releaseNotes = "Rumah Sehat ${project.version}"
+    groups = "petugas"
 }

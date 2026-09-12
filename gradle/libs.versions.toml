@@ -15,6 +15,7 @@ activityCompose = "1.9.3"
 composeBom = "2024.12.01"
 ksp = "2.0.21-1.0.28"
 sentry = "8.53.0"
+appdist = "4.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -47,3 +48,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+appdistribution = { id = "com.google.firebase.appdistribution", version.ref = "appdist" }
