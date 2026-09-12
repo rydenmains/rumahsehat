@@ -95,7 +95,7 @@ class AssessmentCalculatorTest {
     }
 
     @Test
-    fun `opsi N/A 3.4 - threshold persen kebal, inti penuh 90 persen tetap sehat`() {
+    fun `opsi tidak berlaku 3-4 - threshold persen kebal, inti penuh 90 persen tetap sehat`() {
         // 3.4 N/A → total 790/790 = 100% + inti penuh → SEHAT.
         val result = AssessmentCalculator.calculate(allFull(nonApplicable = setOf("3.4")), weights)
         assertEquals(100.0, result.percentage, 0.01)
