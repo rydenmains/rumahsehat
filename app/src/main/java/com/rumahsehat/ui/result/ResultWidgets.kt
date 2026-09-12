@@ -88,12 +88,15 @@ fun GroupBreakdown(
             }
             if (expanded) {
                 Spacer(Modifier.height(8.dp))
+                HorizontalDivider(color = OutlineVariant, thickness = 0.5.dp)
+                Spacer(Modifier.height(4.dp))
                 items.forEach { form ->
                     val s = scoresById[form.id]
                     val ok = s != null && s.isApplicable && s.score >= form.maxScore
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             "${form.id} · ${form.options.getOrNull(s?.optionIndex ?: -1)?.label ?: "Belum dijawab"}",
