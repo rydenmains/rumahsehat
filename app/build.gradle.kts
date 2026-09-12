@@ -157,5 +157,9 @@ configure<com.google.firebase.appdistribution.gradle.AppDistributionExtension> {
         appId = it
     }
     releaseNotes = "Rumah Sehat ${project.version}"
-    groups = "petugas"
+    // Tester langsung via email — tanpa bikin grup di console.
+    // firebase.testers di local.properties (gitignored), pisahkan koma.
+    (System.getenv("FIREBASE_TESTERS") ?: localProps.getProperty("firebase.testers") ?: "").takeIf { it.isNotEmpty() }?.let {
+        testers = it
+    } ?: run { groups = "petugas" }
 }
