@@ -36,7 +36,8 @@ data class SavedAssessmentUi(
     val companyName: String,
     val assessorName: String,
     val date: String,
-    val syncStatus: SyncStatusUi
+    val syncStatus: SyncStatusUi,
+    val healthStatus: String = "TIDAK SEHAT"
 )
 
 enum class SyncStatusUi { TERKIRIM, MENUNGGU_KIRIM }
@@ -256,6 +257,13 @@ fun AssessmentCard(item: SavedAssessmentUi, onClick: () -> Unit) {
                     SyncStatusUi.TERKIRIM -> "Terkirim" to StatusSehat
                     SyncStatusUi.MENUNGGU_KIRIM -> "Menunggu Kirim" to StatusPending
                 }
+                val (hLabel, hColor) = when (item.healthStatus.trim().uppercase()) {
+                    "SEHAT" -> "SEHAT" to StatusSehat
+                    "KURANG SEHAT" -> "KURANG SEHAT" to StatusKurang
+                    else -> "TIDAK SEHAT" to StatusTidakSehat
+                }
+                Text(hLabel, style = MaterialTheme.typography.labelMedium, color = hColor)
+                Spacer(Modifier.width(8.dp))
                 Text(label, style = MaterialTheme.typography.labelMedium, color = color)
             }
         }

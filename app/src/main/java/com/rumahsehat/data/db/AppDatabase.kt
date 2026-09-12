@@ -10,7 +10,7 @@ import com.rumahsehat.data.dao.AssessmentDao
 import com.rumahsehat.data.model.Assessment
 import com.rumahsehat.data.model.ScoreItem
 
-@Database(entities = [Assessment::class, ScoreItem::class], version = 3, exportSchema = true)
+@Database(entities = [Assessment::class, ScoreItem::class], version = 4, exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun assessmentDao(): AssessmentDao
 
@@ -27,6 +27,18 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v3→v4 (v1.7): tambah kolom status 3-tier. Backfill dari isHealthy lama
+         * (SEHAT↔true, TIDAK↔false); KURANG hanya untuk penilaian baru karena
+         * subtotal inti tidak tersimpan di baris lama. Nol risiko: ADD + UPDATE.
+         */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE assessments ADD COLUMN status TEXT NOT NULL DEFAULT 'TIDAK SEHAT'")
+                db.execSQL("UPDATE assessments SET status = CASE WHEN isHealthy = 1 THEN 'SEHAT' ELSE 'TIDAK SEHAT' END")
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -37,7 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "rumah_sehat_db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING) // PRD Constraint: WAL Mode enabled
                 .build()
                 INSTANCE = instance

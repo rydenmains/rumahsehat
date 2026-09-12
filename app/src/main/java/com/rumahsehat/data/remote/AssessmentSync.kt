@@ -156,7 +156,8 @@ object AssessmentSync {
         put("summary", JSONObject().apply {
             put("total_achieved", assessment.totalAchieved)
             put("is_healthy", assessment.isHealthy)
-            put("status", if (assessment.isHealthy) "SEHAT" else "TIDAK SEHAT")
+            // Server hitung ulang (otoritatif); label ini hanya info, diabaikan backend.
+            put("status", assessment.status.ifBlank { if (assessment.isHealthy) "SEHAT" else "TIDAK SEHAT" })
         })
 
         put("photos", JSONObject().apply {

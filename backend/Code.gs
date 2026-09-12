@@ -280,6 +280,9 @@ function doPost(e) {
 
     logToSheet("INFO", "Data baru tersimpan: " + (payload.assessment_id || "tanpa-id") + " | " + formattedDate);
 
+    // Q19: 1 baris log sync per doPost sukses (jejak kiriman dari HP).
+    logSyncRow(payload.assessment_id, meta, serverSummary, formattedDate);
+
     return createJsonResponse({
       status: "SUCCESS",
       message: "Data berhasil disimpan!",
@@ -597,6 +600,79 @@ function clearLogs() {
   Logger.log("clearLogs: " + (lastRow - 1) + " baris log dihapus.");
 }
 
+// ---------------------------------------------------------------------------
+// AuditLog v1.7 (Q19): jejak edit manual admin + log sync dari HP
+// ---------------------------------------------------------------------------
+
+/**
+ * 1 baris log sync per doPost sukses → sheet "AuditLog" (dibuat bila belum
+ * ada): waktu, assessor, assessment_id, status 3-tier, total skor.
+ * Kegagalan logging TIDAK menggagalkan doPost (fail-open, seperti logToSheet).
+ */
+function logSyncRow(assessmentId, meta, serverSummary, formattedDate) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("AuditLog");
+    if (!sheet) {
+      sheet = ss.insertSheet("AuditLog");
+      sheet.appendRow(["Waktu", "Aktor", "Aksi", "Assessment ID", "Detail"]);
+      sheet.getRange(1, 1, 1, 5).setFontWeight("bold");
+      sheet.setFrozenRows(1);
+    }
+    var who = (meta && (meta.assessor_name || meta.company)) || "-";
+    sheet.appendRow([
+      formattedDate, String(who), "SYNC",
+      String(assessmentId || "-"),
+      String((serverSummary && serverSummary.status) || "-") +
+        " | skor " + String((serverSummary && serverSummary.total_achieved) || 0)
+    ]);
+  } catch (e) {
+    Logger.log("logSyncRow gagal: " + e.toString());
+  }
+}
+
+/**
+ * Tangkap EDIT MANUAL admin di sheet Data Assessment → sheet "AuditLog".
+ * Installable onEdit trigger (install manual SEKALI di editor Apps Script):
+ *   1. Buka editor Apps Script → Triggers (jam) → Add Trigger.
+ *   2. Function: onAdminEdit | Event source: From spreadsheet | Event type: On edit.
+ *   3. Save (otorisasi sekali). Selesai — edit manual tercatat otomatis.
+ * Batasan Google: Session.getActiveUser().getEmail() kosong untuk akun Gmail
+ * biasa (privasi) → fallback "unknown". Hanya akun Workspace domain sama yang
+ * mengisi email. Edit via API/script (sync HP) TIDAK memicu trigger ini —
+ * sync HP ditutup oleh logSyncRow di atas.
+ */
+function onAdminEdit(e) {
+  try {
+    if (!e || !e.source) return;
+    var sheet = e.source.getActiveSheet();
+    if (!sheet || sheet.getName() !== CONFIG.SHEET_NAME) return;
+    var range = e.range;
+    if (!range || range.getRow() === 1) return; // header diabaikan
+    var ss = e.source;
+    var log = ss.getSheetByName("AuditLog");
+    if (!log) {
+      log = ss.insertSheet("AuditLog");
+      log.appendRow(["Waktu", "Aktor", "Aksi", "Assessment ID", "Detail"]);
+      log.getRange(1, 1, 1, 5).setFontWeight("bold");
+      log.setFrozenRows(1);
+    }
+    var email = "";
+    try { email = Session.getActiveUser().getEmail() || ""; } catch (ignored) {}
+    var now = Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone(), "yyyy-MM-dd HH:mm:ss");
+    var rowId = String(sheet.getRange(range.getRow(), 1).getValue() || "-");
+    log.appendRow([
+      now, email || "unknown", "EDIT",
+      rowId,
+      "range " + range.getA1Notation() + " | lama: " +
+        String(e.oldValue !== undefined ? e.oldValue : "?").substring(0, 60) +
+        " → baru: " + String(e.value !== undefined ? e.value : "?").substring(0, 60)
+    ]);
+  } catch (err) {
+    Logger.log("onAdminEdit gagal: " + err.toString());
+  }
+}
+
 /** Parse JSON dari teks model yang sering dibungkus teks/fence ```json```. */
 function parseAiJson(text) {
   var source = String(text || "");
@@ -753,15 +829,21 @@ function validateAnswers(answers) {
 }
 
 /**
- * Hitung skor & status dari jawaban yang SUDAH tervalidasi (P1-6).
- * Mirror AssessmentCalculator.kt: total = Σ bobot×faktor; SEHAT hanya bila
- * semua item esensial faktor penuh (=1). "Tidak berlaku" dilewati dari
- * pembagi, sama seperti isApplicable=false di Android.
+ * Hitung skor & status 3-tier dari jawaban yang SUDAH tervalidasi (P1-6, v1.7).
+ * Mirror AssessmentCalculator.kt: total = Σ bobot×faktor (persen dari total
+ * applicable → kebal N/A 3.4); SEHAT = inti penuh + total ≥90%; TIDAK = inti
+ * <80% ATAU total <70%; KURANG = sisanya. Prioritas SEHAT→TIDAK→KURANG;
+ * applicable=0 = TIDAK + invalid. "Tidak berlaku" dilewati dari pembagi.
  * ponytail: duplikasi aturan skor dgn Kotlin disengaja — Apps Script tak bisa
-   import Kotlin; sinkron manual, ada test backend/test_scoring.js.
+ *   import Kotlin; sinkron manual, ada test backend/test_scoring.js.
  */
+var CORE_KEYS = ["air_bersih", "jamban", "spal", "tempat_sampah"];
+var SEHAT_MIN_PERCENT = 90;
+var KURANG_CORE_MIN_PERCENT = 80;
+var KURANG_TOTAL_MIN_PERCENT = 70;
+
 function computeServerSummary(answers) {
-  var achieved = 0, applicable = 0, essentialFailed = false;
+  var achieved = 0, applicable = 0, coreAch = 0, coreApp = 0;
   for (var key in SCORING_RULES) {
     var weight = SCORING_RULES[key];
     var s = String(answers[key]).trim();
@@ -770,14 +852,27 @@ function computeServerSummary(answers) {
     var factor = m ? ANSWER_FACTOR[m[1].toLowerCase()] : 0;
     applicable += weight;
     achieved += weight * factor;
-    if (weight >= ESSENTIAL_MIN_WEIGHT && factor < 1) essentialFailed = true;
+    if (CORE_KEYS.indexOf(key) !== -1) {
+      coreApp += weight;
+      coreAch += weight * factor;
+    }
   }
-  var healthy = applicable > 0 && !essentialFailed;
+  if (applicable === 0) {
+    return { total_achieved: 0, total_applicable: 0, is_healthy: false,
+      status: "TIDAK SEHAT", invalid: true };
+  }
+  var pct = achieved / applicable * 100;
+  var corePct = coreApp > 0 ? coreAch / coreApp * 100 : 0;
+  var coreFull = coreApp > 0 && coreAch === coreApp;
+  var status;
+  if (coreFull && pct >= SEHAT_MIN_PERCENT) status = "SEHAT";
+  else if (corePct < KURANG_CORE_MIN_PERCENT || pct < KURANG_TOTAL_MIN_PERCENT) status = "TIDAK SEHAT";
+  else status = "KURANG SEHAT";
   return {
     total_achieved: achieved,
     total_applicable: applicable,
-    is_healthy: healthy,
-    status: healthy ? "SEHAT" : "TIDAK SEHAT"
+    is_healthy: status === "SEHAT",
+    status: status
   };
 }
 

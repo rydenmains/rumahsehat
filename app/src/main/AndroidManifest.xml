@@ -43,6 +43,11 @@
             android:exported="false"
             android:label="@string/review_title" />
 
+        <activity
+            android:name=".ui.result.ResultActivity"
+            android:exported="false"
+            android:label="@string/result_title" />
+
     </application>
 
 </manifest>

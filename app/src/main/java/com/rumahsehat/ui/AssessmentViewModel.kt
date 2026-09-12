@@ -9,6 +9,7 @@ import com.rumahsehat.data.model.FormItemsProvider
 import com.rumahsehat.data.model.ScoreItem
 import com.rumahsehat.data.repository.AssessmentRepository
 import com.rumahsehat.domain.AssessmentCalculator
+import com.rumahsehat.domain.AssessmentCalculator
 import com.rumahsehat.ui.inspection.AllFormQuestions
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
@@ -25,7 +26,9 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
     val formItems: List<FormItem> get() = _formItems
     private val weights = _formItems.associate { it.id to it.maxScore }
     private val photoPaths = mutableMapOf<String, String>()
-    private val _photoPaths = MutableLiveData(emptyMap<String, String>())
+    private val _lastSavedId = MutableLiveData<String?>()
+    val lastSavedId: LiveData<String?> get() = _lastSavedId
+
     /** Status foto per section; observe oleh fragment untuk refresh hint. */
     val photoPathsLive: LiveData<Map<String, String>> get() = _photoPaths
 
@@ -109,6 +112,7 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
                 totalApplicable = calcResult.totalApplicable,
                 percentage = calcResult.percentage,
                 isHealthy = calcResult.isHealthy,
+                status = calcResult.status.label,
                 syncStatus = "PENDING",
                 photoPathsJson = photoPathsSnapshot.entries.joinToString(";") { "${it.key}=${it.value}" }
             )
@@ -117,6 +121,7 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
             // viewModelScope dibatalkan saat Activity finish; bungkus dengan NonCancellable.
             withContext(NonCancellable) {
                 repository.insert(assessment, scoreItems.map { it.copy(assessmentId = assessmentId) })
+                _lastSavedId.postValue(assessmentId)
                 // Offline-first: gagal kirim = tetap PENDING, dicoba ulang oleh SyncWorker.
                 repository.syncPending()
             }
@@ -157,12 +162,14 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
                 totalApplicable = calcResult.totalApplicable,
                 percentage = calcResult.percentage,
                 isHealthy = calcResult.isHealthy,
+                status = calcResult.status.label,
                 syncStatus = "PENDING",
                 photoPathsJson = photoPathsSnapshot.entries.joinToString(";") { "${it.key}=${it.value}" }
             )
 
             withContext(NonCancellable) {
                 repository.insert(assessment, scoreItems.map { it.copy(assessmentId = assessmentId) })
+                _lastSavedId.postValue(assessmentId)
                 repository.syncPending()
             }
         }
@@ -184,6 +191,12 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
         val missingItems = AllFormQuestionIds.filter { selections[it] == null }
         if (missingItems.isNotEmpty()) {
             issues.add("Masih ada ${missingItems.size} soal yang belum dijawab")
+        }
+
+        // Q14: 4 item inti (2.1–2.4) SELALU applicable — tolak save bila inti kosong.
+        val missingCore = AssessmentCalculator.CORE_ITEM_IDS.filter { selections[it] == null }
+        if (missingCore.isNotEmpty()) {
+            issues.add("Indikator sanitasi inti (2.1–2.4) wajib diisi")
         }
 
         val missingPhotos = photoKeys.filter { photos[it] == null }

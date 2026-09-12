@@ -59,5 +59,7 @@ val OnBackground = Color(0xFF181C1D)
 val SurfaceVariant = Color(0xFFE0E3E3)
 
 val StatusSehat = Color(0xFF2E7D32)
+val StatusKurang = Color(0xFFB26A00)
+val StatusKurangContainer = Color(0xFFFFF3D6)
 val StatusTidakSehat = Color(0xFFBA1A1A)
 val StatusPending = Color(0xFFFFA000)

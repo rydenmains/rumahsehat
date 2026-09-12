@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -47,6 +48,15 @@ fun InspectionFormScreen(
 
     val isIdentity = current == 0
     val question = if (isIdentity) null else questions[current - 1]
+
+    // v1.7: setelah simpan sukses → buka ResultActivity untuk assessment baru.
+    val lastSavedId by viewModel.lastSavedId.observeAsState()
+    LaunchedEffect(lastSavedId) {
+        lastSavedId?.let { id ->
+            com.rumahsehat.ui.result.ResultActivity.start(context, id)
+            onFinish()
+        }
+    }
     val section = question?.let { q ->
         AllFormSections.firstOrNull { s -> s.questions.any { it.id == q.id } }
     }
@@ -214,7 +224,6 @@ fun InspectionFormScreen(
                 TextButton(onClick = {
                     showConfirm = false
                     viewModel.saveAssessmentFromCompose(petugasName, instansi, selections, notes)
-                    onFinish()
                 }) {
                     Text("Simpan & Kirim")
                 }

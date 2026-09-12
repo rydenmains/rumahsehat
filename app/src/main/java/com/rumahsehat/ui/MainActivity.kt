@@ -180,11 +180,13 @@ fun AppShell(viewModel: AssessmentViewModel) {
 
 private fun Assessment.toSavedAssessmentUi(): SavedAssessmentUi {
     val date = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(createdAt))
+    val label = status.ifBlank { if (isHealthy) "SEHAT" else "TIDAK SEHAT" }
     return SavedAssessmentUi(
         id = id,
         companyName = company,
         assessorName = assessorId,
         date = date,
-        syncStatus = if (syncStatus == "SYNCED") SyncStatusUi.TERKIRIM else SyncStatusUi.MENUNGGU_KIRIM
+        syncStatus = if (syncStatus == "SYNCED") SyncStatusUi.TERKIRIM else SyncStatusUi.MENUNGGU_KIRIM,
+        healthStatus = label
     )
 }

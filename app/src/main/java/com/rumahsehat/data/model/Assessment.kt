@@ -14,6 +14,8 @@ data class Assessment(
     val totalApplicable: Int = 0,
     val percentage: Double = 0.0,
     val isHealthy: Boolean = false,
+    /** Status 3-tier v1.7: SEHAT | KURANG SEHAT | TIDAK SEHAT. isHealthy dipertahankan (Q16). */
+    val status: String = "TIDAK SEHAT",
     val syncStatus: String = "DRAFT", // DRAFT, PENDING, SYNCED
     val photoPathsJson: String? = null
 )

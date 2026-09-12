@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 
 const src = fs.readFileSync(path.join(__dirname, "Code.gs"), "utf8");
-const start = src.indexOf("var ESSENTIAL_MIN_WEIGHT");
+const start = src.indexOf("var SCORING_RULES");
 const end = src.indexOf("function setupEnvironment", start);
 if (start === -1 || end === -1) throw new Error("Blok scoring tidak ditemukan di Code.gs");
 eval(src.slice(start, end));
@@ -38,11 +38,27 @@ check("all-c -> SEHAT 810", computeServerSummary(answers({})),
 check("all-a -> TIDAK SEHAT 0", computeServerSummary(answers(Object.fromEntries(Object.keys(SCORING_RULES).map(k => [k, "a"])))),
   { total_achieved: 0, total_applicable: 810, is_healthy: false, status: "TIDAK SEHAT" });
 
-// 3. Boundary: esensial gagal (air_bersih=b) walau skor tinggi -> TETAP TIDAK SEHAT
-check("essential b -> TIDAK SEHAT 735", computeServerSummary(answers({ air_bersih: "b" })),
-  { total_achieved: 735, total_applicable: 810, is_healthy: false, status: "TIDAK SEHAT" });
+// 3. Boundary: inti 2.1=b (75) walau total 90,7% -> KURANG SEHAT (v1.7)
+check("inti b -> KURANG 735", computeServerSummary(answers({ air_bersih: "b" })),
+  { total_achieved: 735, total_applicable: 810, is_healthy: false, status: "KURANG SEHAT" });
 
-// 4. Non-esensial gagal (dinding=a) -> tetap SEHAT
+// 3b. Inti jatuh <80% (2.1=a → inti 72,7%) -> TIDAK walau total 81,5%
+check("inti a -> TIDAK 660", computeServerSummary(answers({ air_bersih: "a" })),
+  { total_achieved: 660, total_applicable: 810, is_healthy: false, status: "TIDAK SEHAT" });
+
+// 3c. Inti penuh tapi semua non-inti 0 (550/810=67,9%) -> TIDAK
+check("inti penuh total rendah -> TIDAK 550", computeServerSummary(answers(
+  Object.fromEntries(["langit_langit","dinding","lantai","jendela_kamar","jendela_rk","ventilasi","lubang_asap","pencahayaan","buka_jendela_kamar","buka_jendela_rk","bersih_rumah","buang_tinja_bayi","buang_sampah"].map(k => [k, "a"]))
+)),
+  { total_achieved: 550, total_applicable: 810, is_healthy: false, status: "TIDAK SEHAT" });
+
+// 3d. Boundary SEHAT: inti penuh + total 730/810=90,1% -> SEHAT
+check("boundary 90 persen -> SEHAT 730", computeServerSummary(answers(
+  { langit_langit: "b", dinding: "b", lantai: "b", jendela_kamar: "b", jendela_rk: "a", buang_sampah: "a" }
+)),
+  { total_achieved: 730, total_applicable: 810, is_healthy: true, status: "SEHAT" });
+
+// 4. Non-esensial gagal (dinding=a) -> inti penuh + 790/810=97,5% -> SEHAT
 check("non-essential a -> SEHAT 790", computeServerSummary(answers({ dinding: "a" })),
   { total_achieved: 790, total_applicable: 810, is_healthy: true, status: "SEHAT" });
 

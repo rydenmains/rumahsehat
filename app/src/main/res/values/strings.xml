@@ -7,6 +7,7 @@
     <string name="applicable">Tidak Berlaku</string>
     <string name="score">Skor</string>
     <string name="status_healthy">SEHAT</string>
+    <string name="status_kurang">KURANG SEHAT</string>
     <string name="status_unhealthy">TIDAK SEHAT</string>
     <string name="status_pending">Menunggu Kirim</string>
     <string name="status_synced">Terkirim</string>
@@ -109,6 +110,18 @@
 
     <!-- Tinjauan (Review) -->
     <string name="review_title">Tinjauan Penilaian</string>
+    <string name="review_items_title">Hasil Per Item</string>
+    <string name="item_not_applicable">Tidak Berlaku</string>
+
+    <!-- Hasil penilaian (Result, v1.7) -->
+    <string name="result_title">Hasil Penilaian</string>
+    <string name="result_fulfilled">%1$d dari %2$d indikator terpenuhi</string>
+    <string name="result_msg_sehat">Rumah Anda dalam kondisi baik dan layak huni.</string>
+    <string name="result_msg_kurang">Beberapa kriteria belum terpenuhi.</string>
+    <string name="result_msg_tidak">Banyak kriteria belum terpenuhi.</string>
+    <string name="result_detail">Lihat Detail Penilaian</string>
+    <string name="result_breakdown">Rincian per kelompok</string>
+    <string name="result_invalid_note">Data belum lengkap — dilengkapi dulu sebelum dinilai akhir.</string>
     <string name="review_items_title">Hasil Per Item</string>
     <string name="item_not_applicable">Tidak Berlaku</string>
 
