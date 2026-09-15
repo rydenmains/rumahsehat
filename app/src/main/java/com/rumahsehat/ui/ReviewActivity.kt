@@ -1,21 +1,32 @@
 package com.rumahsehat.ui
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.stringResource
@@ -90,13 +101,24 @@ fun ReviewScreen(viewModel: AssessmentViewModel, onBack: () -> Unit) {
                 item {
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)) {
                         Column(Modifier.padding(16.dp)) {
-                            Text(assessment.company, style = MaterialTheme.typography.titleMedium, color = OnSurface)
+                            Text(
+                                assessment.houseName.ifBlank { assessment.company },
+                                style = MaterialTheme.typography.titleMedium, color = OnSurface
+                            )
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 "${assessment.assessorId} · ${SimpleDateFormat("dd MMM yyyy HH:mm", Locale.getDefault()).format(Date(assessment.createdAt))}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = OnSurfaceVariant
                             )
+                            if (assessment.houseName.isNotBlank()) {
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    assessment.company,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = OnSurfaceVariant
+                                )
+                            }
                             Spacer(Modifier.height(8.dp))
                             Text(
                                 "Skor: ${assessment.totalAchieved} dari ${assessment.totalApplicable} (${"%.1f".format(assessment.percentage)}%)",
@@ -105,6 +127,9 @@ fun ReviewScreen(viewModel: AssessmentViewModel, onBack: () -> Unit) {
                             )
                         }
                     }
+                }
+                item {
+                    PhotoSection(photoPathsJson = assessment.photoPathsJson)
                 }
             }
 
@@ -132,6 +157,60 @@ fun ScoreRow(item: ScoreItem, answerLabel: String?) {
             if (!item.reason.isNullOrBlank()) {
                 Spacer(Modifier.height(4.dp))
                 Text("Catatan: ${item.reason}", style = MaterialTheme.typography.bodyMedium, color = OnSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PhotoSection(photoPathsJson: String?) {
+    val paths = remember(photoPathsJson) {
+        photoPathsJson?.split(";")?.filter { it.contains('=') }
+            ?.associate { it.substringBefore('=') to it.substringAfter('=') }
+            .orEmpty()
+    }
+    val labels = listOf(
+        "house_front" to "Foto 1: Tampak Depan Rumah",
+        "sanitation" to "Foto 2: Sanitasi",
+        "kitchen_spal" to "Foto 3: Dapur / SPAL"
+    )
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Dokumentasi Foto", style = MaterialTheme.typography.titleMedium, color = OnSurface)
+            Spacer(Modifier.height(12.dp))
+            labels.forEach { (key, title) ->
+                val path = paths[key]
+                Text(title, style = MaterialTheme.typography.labelMedium, color = Primary)
+                Spacer(Modifier.height(6.dp))
+                if (path != null && java.io.File(path).exists()) {
+                    val bitmap by produceState<ImageBitmap?>(initialValue = null, path) {
+                        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            BitmapFactory.decodeFile(path)?.asImageBitmap()
+                        }
+                    }
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(180.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (bitmap != null) {
+                            Image(bitmap!!, contentDescription = title, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        } else {
+                            Icon(Icons.Filled.Camera, contentDescription = null, tint = Primary, modifier = Modifier.size(32.dp))
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(64.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Foto tidak tersedia di perangkat ini", style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
             }
         }
     }

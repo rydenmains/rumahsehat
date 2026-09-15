@@ -2,6 +2,7 @@ package com.rumahsehat.ui.inspection
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -42,6 +43,7 @@ fun InspectionFormScreen(
     var issuesMessage by remember { mutableStateOf("") }
     var petugasName by remember { mutableStateOf(viewModel.assessorName) }
     var instansi by remember { mutableStateOf(viewModel.companyName) }
+    var houseName by remember { mutableStateOf(viewModel.houseName) }
     val selections = remember { mutableStateMapOf<String, Int>() }
     val notes = remember { mutableStateMapOf<String, String>() }
     val photos = remember { mutableStateMapOf<String, String?>() }
@@ -74,6 +76,34 @@ fun InspectionFormScreen(
         }
     }
 
+    // Galeri: salin pilihan ke file lokal agar preview & sync baca File(path) seperti hasil kamera.
+    // Photo Picker = tanpa izin storage. Fallback GetContent untuk HP tanpa Photo Picker.
+    fun useGalleryUri(uri: Uri) {
+        try {
+            val file = File(context.getExternalFilesDir(null), "IMG_GAL_${photoTarget}_${System.currentTimeMillis()}.jpg")
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                file.outputStream().use { input.copyTo(it) }
+            }
+            viewModel.markPhotoTaken(photoTarget, file.absolutePath)
+            photos[photoTarget] = file.absolutePath
+        } catch (_: Exception) { }
+    }
+    val pickGalleryFallback = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) useGalleryUri(uri)
+    }
+    val pickGallery = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) useGalleryUri(uri)
+    }
+
+    fun pickFromGallery() {
+        photoTarget = question?.let { q -> AssessmentViewModel.photoKeyFor(q.id) } ?: "house_front"
+        try {
+            pickGallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        } catch (_: Exception) {
+            pickGalleryFallback.launch("image/*")
+        }
+    }
+
     fun capturePhoto() {
         val sectionKey = question?.let { q ->
             AssessmentViewModel.photoKeyFor(q.id)
@@ -92,7 +122,7 @@ fun InspectionFormScreen(
     }
 
     fun onFinishPressed() {
-        val issues = viewModel.validationIssues(petugasName, instansi, selections, photos)
+        val issues = viewModel.validationIssues(petugasName, instansi, selections, photos, houseName)
         if (issues.isNotEmpty()) {
             issuesMessage = issues.joinToString("\n\n")
             showIssues = true
@@ -156,8 +186,10 @@ fun InspectionFormScreen(
                     IdentityStepCard(
                         name = petugasName,
                         instansi = instansi,
+                        houseName = houseName,
                         onNameChange = { petugasName = it; viewModel.assessorName = it },
-                        onInstansiChange = { instansi = it; viewModel.companyName = it }
+                        onInstansiChange = { instansi = it; viewModel.companyName = it },
+                        onHouseChange = { houseName = it; viewModel.houseName = it }
                     )
                 }
             } else {
@@ -174,7 +206,8 @@ fun InspectionFormScreen(
                             title = section!!.photoTitle,
                             subtitle = section.photoSubtitle,
                             photoUri = photos[section.photoCategoryId],
-                            onCaptureClick = { capturePhoto() }
+                            onCaptureClick = { capturePhoto() },
+                            onGalleryClick = { pickFromGallery() }
                         )
                     }
                 }
@@ -215,14 +248,14 @@ fun InspectionFormScreen(
             title = { Text(stringResource(R.string.confirm_save_title)) },
             text = {
                 Text(
-                    stringResource(R.string.confirm_identity_fmt, petugasName.ifBlank { "-" }, instansi.ifBlank { "-" }) +
+                    stringResource(R.string.confirm_identity_fmt, petugasName.ifBlank { "-" }, instansi.ifBlank { "-" }, houseName.ifBlank { "-" }) +
                         "\n\n" + stringResource(R.string.confirm_save_message, answered, total, photoCount, 3)
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
                     showConfirm = false
-                    viewModel.saveAssessmentFromCompose(petugasName, instansi, selections, notes)
+                    viewModel.saveAssessmentFromCompose(petugasName, instansi, selections, notes, houseName)
                 }) {
                     Text(stringResource(R.string.save_assessment))
                 }

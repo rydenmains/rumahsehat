@@ -1,7 +1,7 @@
 /**
  * ==============================================================================
  * HEALTHY HOME ASSESSMENT APP - BACKEND SCRIPT (Google Apps Script)
- * Version: 3.0.0 (17 Indikator berbasis jawaban kata + Deferred AI)
+ * Version: 3.3.0 (Groq utama + OpenRouter cadangan + prompt grounded)
  *
  * - doPost   : menyimpan baris assessment dari aplikasi Android (17 jawaban kata)
  * - doGet    : ?action=data -> membaca seluruh baris sheet sebagai JSON
@@ -25,23 +25,34 @@ var CONFIG = {
   // Token penulisan (dikirim app via payload.token). Dibaca dari Script Properties
   // "API_TOKEN" — TIDAK ada fallback hardcoded. Jika kosong, semua tulis/baca ditolak.
   API_TOKEN: PropertiesService.getScriptProperties().getProperty("API_TOKEN") || "",
-  // Model visi GRATIS via OpenRouter (suffix :free = $0, tanpa kartu kredit).
-  // Kuota: 50 request/hari (naik ke 1000 jika akun pernah isi kredit $10 sekali).
-  // Terverifikasi support foto. Ganti ke model berbayar (mis. google/gemini-2.5-flash) hanya jika saldo ada.
-  GEMINI_MODEL: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+  // v3.3: GROQ UTAMA (gratis longgar, vision), OpenRouter cadangan bila Groq gagal.
+  // Key disimpan di Script Properties: GROQ_API_KEY (wajib), OPENROUTER_API_KEY (cadangan).
+  // JANGAN hardcode key di file ini. Model Groq vision: meta-llama/llama-4-scout-17b-16e-instruct,
+  // cadangan OpenRouter: google/gemma-3-27b-it:free (JANGAN *-reasoning: output chain-of-thought
+  // Inggris "Okay, let's tackle..." bukan JSON → parse selalu gagal).
+  GROQ_MODEL: "meta-llama/llama-4-scout-17b-16e-instruct",
+  GEMINI_MODEL: "google/gemma-3-27b-it:free",
   // Jumlah baris maksimum diproses per panggilan processPendingAi() (limit runtime).
   AI_BATCH_SIZE: 5,
+  // Token maksimum per request AI (model reasoning lama kepotong di 800 → JSON terpotong).
+  AI_MAX_TOKENS: 1500,
   // Batas request tulis per menit (perlindungan kuota/serangan). 429 bila lewat.
   RATE_LIMIT_PER_MINUTE: 200,
   // Ukuran payload maksimum (foto terkompresi ~2MB; sisakan ruang). 413 bila lewat.
   MAX_PAYLOAD_BYTES: 5 * 1024 * 1024
 };
 
-/** Key OpenRouter diambil dari Script Properties — JANGAN hardcode.
- *  Buat di https://openrouter.ai/keys lalu simpan sebagai script property "OPENROUTER_API_KEY".
+/** Key AI diambil dari Script Properties — JANGAN hardcode.
+ *  GROQ_API_KEY      : utama. Buat di https://console.groq.com/keys
+ *  OPENROUTER_API_KEY: cadangan. Buat di https://openrouter.ai/keys
  */
 function getGeminiKey() {
   return PropertiesService.getScriptProperties().getProperty("OPENROUTER_API_KEY");
+}
+
+/** Key Groq (provider utama v3.3). */
+function getGroqKey() {
+  return PropertiesService.getScriptProperties().getProperty("GROQ_API_KEY");
 }
 
 // ---------------------------------------------------------------------------
@@ -60,14 +71,18 @@ function setApiToken(token) {
   Logger.log("API_TOKEN diset: " + token.substring(0, 4) + "…");
 }
 
-/** Cek konfigurasi: apakah API_TOKEN sudah ter-set. Jalankan untuk verifikasi. */
+/** Cek konfigurasi: apakah API_TOKEN + key AI sudah ter-set. Jalankan untuk verifikasi. */
 function verifyConfig() {
-  var t = PropertiesService.getScriptProperties().getProperty("API_TOKEN");
-  var k = PropertiesService.getScriptProperties().getProperty("OPENROUTER_API_KEY");
-  var msg = "API_TOKEN ter-set: " + !!t + (t ? " (panjang " + t.length + ")" : "") + " | OPENROUTER_API_KEY ter-set: " + !!k;
+  var p = PropertiesService.getScriptProperties();
+  var t = p.getProperty("API_TOKEN");
+  var k = p.getProperty("OPENROUTER_API_KEY");
+  var g = p.getProperty("GROQ_API_KEY");
+  var msg = "API_TOKEN ter-set: " + !!t + (t ? " (panjang " + t.length + ")" : "")
+    + " | GROQ_API_KEY ter-set: " + !!g
+    + " | OPENROUTER_API_KEY ter-set: " + !!k;
   Logger.log(msg);
   logToSheet("INFO", msg);
-  return { api_token_set: !!t, openrouter_key_set: !!k };
+  return { api_token_set: !!t, groq_key_set: !!g, openrouter_key_set: !!k };
 }
 
 // ---------------------------------------------------------------------------
@@ -239,6 +254,7 @@ function doPost(e) {
       formattedDate,
       safeCell(meta.assessor_name || payload.assessor_name || "-"),
       safeCell(meta.company || payload.company || "-"),
+      safeCell(meta.house_name || payload.house_name || "-"),
 
       // I. KOMPONEN RUMAH (8 Items) — jawaban kata
       safeCell(a.langit_langit !== undefined ? a.langit_langit : "-"),
@@ -269,8 +285,8 @@ function doPost(e) {
       safeCell(payload.notes || "-"),
       photoUrls[0], photoUrls[1], photoUrls[2],
 
-      // ANALISIS AI (2 kolom) — diisi belakangan oleh processPendingAi()
-      "", ""
+      // ANALISIS AI (3 kolom) — diisi belakangan oleh processPendingAi()
+      "", "", ""
     ];
 
     sheet.appendRow(newRow);
@@ -342,6 +358,15 @@ function processPendingAi() {
       if (!fileId) continue;
       try {
         var blob = DriveApp.getFileById(fileId).getBlob();
+        // Foto raksasa bikin request OpenRouter raksasa/lambat dan model sering
+        // mengabaikan gambar (hasil "foto tidak jelas" yang ngawur padahal foto ada).
+        // App sudah kompres ≤500KB; ini jaring pengaman bila file Drive besar.
+        if (blob.getBytes().length > 900 * 1024) {
+          try {
+            blob = DriveApp.getFileById(fileId).getThumbnail();
+            logToSheet("WARN", "Foto " + photoCols[key].key + " >900KB, pakai thumbnail.");
+          } catch (thumbErr) { logToSheet("WARN", "Thumbnail gagal, pakai blob asli: " + thumbErr); }
+        }
         photos[photoCols[key].key] = Utilities.base64Encode(blob.getBytes());
       } catch (e) { logToSheet("ERROR", "Foto gagal dibaca (" + photoCols[key].key + "): " + e); }
     }
@@ -349,9 +374,29 @@ function processPendingAi() {
     var result = analyzeAssessmentWithGemini(photos, {
       answers: rowAnswers(data[r], headers),
       summary: { total_achieved: data[r][headers.indexOf("Total Skor")] },
-      is_healthy: String(data[r][headers.indexOf("Status Health")]).indexOf("TIDAK") === -1,
+      is_healthy: String(data[r][headers.indexOf("Status Health")] || "").trim().toUpperCase() === "SEHAT",
       status: String(data[r][headers.indexOf("Status Health")] || "SEHAT")
     });
+
+    // v3.2: JSON gagal parse → JANGAN segel "dilewati" (segel = skip selamanya).
+    // Status dibiarkan kosong agar trigger 10 menit berikut retry otomatis, maks 3x
+    // (counter di kolom Penjelasan AI = "RETRY n") supaya tidak membakar kuota :free.
+    if (result.parseFailed) {
+      var retryCount = 0;
+      var m = String(data[r][colExplanation - 1] || "").match(/RETRY (\d+)/);
+      if (m) retryCount = Number(m[1]);
+      if (retryCount >= 3) {
+        sheet.getRange(r + 1, colStatus).setValue("Analisis AI dilewati");
+        if (colExplanation > 0) sheet.getRange(r + 1, colExplanation).clearContent();
+        sheet.getRange(r + 1, colRecommendation).setValue("Respons AI bukan JSON valid setelah 3x coba: " + String(result.rawTail || "").substring(0, 120));
+        logToSheet("ERROR", "AI " + String(data[r][0]) + " gagal parse 3x, disegel. Ekor: " + String(result.rawTail || ""));
+      } else {
+        if (colExplanation > 0) sheet.getRange(r + 1, colExplanation).setValue("RETRY " + (retryCount + 1));
+        logToSheet("WARN", "AI " + String(data[r][0]) + " parse gagal (retry " + (retryCount + 1) + "/3). Ekor: " + String(result.rawTail || ""));
+      }
+      processed++;
+      continue;
+    }
 
     var colHealth = headers.indexOf("Status Health") + 1;
 
@@ -427,8 +472,7 @@ function resetAiStatuses() {
 }
 
 /**
- * Analisis 3 foto + jawaban kata OpenRouter (model vision).
- * Gunakan SEMUA photo key (house_front, sanitation, kitchen_spal).
+ * Analisis 3 foto + jawaban kata. v3.3: GROQ UTAMA → OpenRouter CADANGAN.
  * Output konsisten: { is_valid, flag, recommendation }.
  * Fallback bila key kosong / foto tak lengkap / request gagal → data tetap tersimpan.
  */
@@ -436,11 +480,6 @@ function analyzeAssessmentWithGemini(photos, assessment) {
   var fallback = function (flag, recommendation) {
     return { is_valid: true, flag: flag, recommendation: recommendation };
   };
-
-  var apiKey = getGeminiKey();
-  if (!apiKey) {
-    return fallback("Analisis AI dilewati", "Key OpenRouter belum diisi di Script Properties (OPENROUTER_API_KEY).");
-  }
 
   var sectionKeys = ["house_front", "sanitation", "kitchen_spal"];
   var content = [];
@@ -466,68 +505,102 @@ function analyzeAssessmentWithGemini(photos, assessment) {
   });
 
   var prompt = [
-    "Kamu adalah asisten Dinas Kesehatan untuk validasi Rumah Sehat.",
-    "Berikut 3 foto kondisi rumah (depan, sanitasi, dapur/SPAL).",
-    "Jawaban petugas (indikator): " + answersText,
-    "Status sementara: " + assessment.status + " (is_healthy=" + assessment.is_healthy + ").",
+    "Kamu adalah asisten Dinas Kesehatan untuk validasi Rumah Sehat. Jawab HANYA JSON, tanpa teks lain.",
+    "Ada 3 foto, masing-masing punya peran BERBEDA — jangan tertukar:",
+    "Foto 1 = KOMPONEN RUMAH (langit-langit, dinding, lantai, jendela kamar, jendela ruang keluarga, ventilasi, pencahayaan).",
+    "Foto 2 = SARANA SANITASI (sumber air bersih, jamban/leher angsa/tutup/septic tank, SPAL/saluran limbah, tempat sampah).",
+    "Foto 3 = PERILAKU PENGHUNI (jendela dibuka, rumah dibersihkan, pembuangan tinja bayi & sampah).",
+    "Jawaban petugas (17 indikator): " + answersText,
+    "Status sementara dari jawaban (hitung server, otoritatif): " + assessment.status + ".",
     "",
-    "Nilai dari jawaban + foto: apakah rumah ini SEHAT?",
-    "PENTING - Lakukan langkah ini:",
-    "1. Analisis SETIAP foto satu per satu. Tulis apa yang benar-benar terlihat di foto",
-    "   (kondisi plafon, dinding, lantai, jendela, ventilasi, jamban, SPAL, tempat sampah).",
-    "   Bila foto buram / sudut tidak jelas / tidak menampilkan ruangan yang dimaksud,",
-    "   tuliskan jelas bahwa jenis foto tidak bisa dipastikan (mis. 'foto tidak jelas, tidak bisa dipastikan').",
-    "2. Gunakan jawaban petugas sebagai sumber utama; foto sebagai pendukung.",
-    "   BODYGUARD: jika foto dengan jelas menunjukkan kondisi yang BERTENTANGAN dengan jawaban",
-    "   (mis. jawaban 'SEHAT' tapi foto menunjukkan genangan air, sampah menumpuk, jamban kotor,",
-    "   SPAL terbuka, dinding/lantai rusak parah), maka flag foto mengalahkan jawaban petugas.",
-    "3. Putuskan flag akhir (SEHAT / TIDAK SEHAT / PERLU PERBAIKAN) dari gabungan kedua sumber.",
+    "ATURAN WAJIB:",
+    "1. Deskripsikan tiap foto SECARA SPESIFIK dan BERBEDA satu sama lain: sebut objek/ruangan yang terlihat",
+    "   (mis. 'terlihat lantai keramik bersih', 'terlihat jamban leher angsa dengan tutup').",
+    "   DILARANG menulis 'foto tidak jelas, tidak bisa dipastikan' yang SAMA untuk ketiga foto sekaligus.",
+    "   Kalimat itu hanya boleh dipakai untuk SATU foto yang memang buram/hitam/blank/bukan rumah.",
+    "2. Jawaban petugas adalah sumber UTAMA; foto hanya pendukung.",
+    "3. Flag WAJIB sama persis dengan Status sementara (" + assessment.status + "), KECUALI foto dengan JELAS",
+    "   bertentangan (mis. jawaban 'SEHAT' tapi foto menunjukkan jamban kotor/terbuka, sampah menumpuk,",
+    "   genangan SPAL, dinding retak parah). Bila menurunkan, bukti konkretnya HARUS tertulis di per_photo.",
+    "4. is_valid=false HANYA bila foto benar-benar blank/hitam/buram total/bukan foto rumah.",
+    "   Foto seadanya (gelap, miring, sebagian ruangan) tetap is_valid=true + deskripsikan apa adanya.",
+    "5. Rekomendasi: 1-2 kalimat Bahasa Indonesia, menyebut indikator terburuk dari jawaban (huruf 'a' dulu),",
+    "   JANGAN mengulang kalimat generik.",
     "",
-    "Jawab JSON HANYA dengan format:",
-    '{ "is_valid": true/false, "flag": "SEHAT"|"TIDAK SEHAT"|"PERLU PERBAIKAN",',
-    '  "per_photo": ["deskripsi foto 1", "deskripsi foto 2", "deskripsi foto 3"],',
-    '  "recommendation": "rekomendasi singkat dalam 1-2 kalimat (Indonesia)" }',
-    "Jika foto buram/tidak jelas, is_valid=false."
+    "Jawab JSON HANYA dengan format persis ini (tanpa markdown fence):",
+    '{"is_valid": true, "flag": "' + assessment.status + '",',
+    ' "per_photo": ["deskripsi spesifik foto 1 (komponen rumah)", "deskripsi spesifik foto 2 (sanitasi)", "deskripsi spesifik foto 3 (perilaku)"],',
+    ' "recommendation": "rekomendasi 1-2 kalimat Bahasa Indonesia"}'
   ].join("\n");
 
   content.unshift({ type: "text", text: prompt });
 
-  var requestBody = {
-    model: CONFIG.GEMINI_MODEL,
-    messages: [{ role: "user", content: content }],
-    temperature: 0, // deterministik: hindari flag berubah-ubah antar run
-    max_tokens: 800
+  // Helper lokal: kirim ke 1 provider, return { ok, text } atau { ok:false, reason }.
+  // response_format json_object dicoba dulu (Groq dukung penuh); bila 400 → retry tanpa.
+  var tryProvider = function (url, apiKey, model, label) {
+    var body = {
+      model: model,
+      messages: [{ role: "user", content: content }],
+      temperature: 0.1, // rendah tapi >0: 0 murni bikin model gratis ngaco/stuck
+      max_tokens: CONFIG.AI_MAX_TOKENS,
+      response_format: { type: "json_object" }
+    };
+    var resp = postToAi(url, apiKey, body, label);
+    if (resp === null) { // 400 karena response_format tidak didukung → 1x tanpa JSON mode
+      delete body.response_format;
+      resp = postToAi(url, apiKey, body, label);
+    }
+    if (resp === null) return { ok: false, reason: "request gagal (lihat Execution log)" };
+    if (resp.error) return { ok: false, reason: String(resp.error.message || resp.error) };
+    var t = resp.choices && resp.choices[0] && resp.choices[0].message && resp.choices[0].message.content;
+    if (t && typeof t !== "string") {
+      // Sebagian model mengembalikan content sebagai array part (bukan string).
+      try {
+        t = t.map(function (p) { return (p && p.text) || ""; }).join("");
+      } catch (convErr) { t = String(t); }
+    }
+    if (!t) return { ok: false, reason: "respons kosong" };
+    var p = parseAiJson(t);
+    if (!p) return { ok: false, reason: "bukan JSON", rawTail: String(t).substring(0, 200) };
+    return { ok: true, parsed: p };
   };
 
-  // JSON Mode bikin banyak model :free di-400 (param tidak didukung) → coba dulu, retry tanpa.
-  requestBody.response_format = { type: "json_object" };
-  var response = postToOpenRouter(apiKey, requestBody);
-  if (response === null) {
-    // 400 karena response_format tidak didukung → coba sekali lagi tanpa JSON Mode.
-    delete requestBody.response_format;
-    response = postToOpenRouter(apiKey, requestBody);
+  // 1) GROQ UTAMA
+  var groqKey = getGroqKey();
+  var usedProvider = "";
+  var attempt = null;
+  if (groqKey) {
+    usedProvider = "groq";
+    attempt = tryProvider("https://api.groq.com/openai/v1/chat/completions", groqKey, CONFIG.GROQ_MODEL, "Groq");
+    if (!attempt.ok) logToSheet("WARN", "Groq gagal (" + attempt.reason + "), fallback ke OpenRouter.");
+  } else {
+    logToSheet("WARN", "GROQ_API_KEY belum diisi, langsung ke OpenRouter.");
   }
-  if (response === null) {
-    return fallback("Analisis AI dilewati", "Error OpenRouter: request gagal (lihat Execution log).");
+
+  // 2) OPENROUTER CADANGAN (bila Groq gagal / key kosong)
+  if (!attempt || !attempt.ok) {
+    var orKey = getGeminiKey();
+    if (!orKey) {
+      return fallback("Analisis AI dilewati",
+        "Key AI belum diisi di Script Properties (GROQ_API_KEY utama, OPENROUTER_API_KEY cadangan).");
+    }
+    usedProvider = "openrouter";
+    attempt = tryProvider("https://openrouter.ai/api/v1/chat/completions", orKey, CONFIG.GEMINI_MODEL, "OpenRouter");
+    if (!attempt.ok) {
+      // Kedua provider gagal → sinyal retry (JANGAN segel), pemanggil yang atur counter.
+      return { parseFailed: true, rawTail: usedProvider + ": " + String(attempt.reason || "") + " " + String(attempt.rawTail || "").substring(0, 160) };
+    }
   }
-  if (response.error) {
-    return fallback("Analisis AI dilewati", "Error OpenRouter: " + response.error.message);
-  }
-  var text = response.choices && response.choices[0]
-    && response.choices[0].message && response.choices[0].message.content;
-  if (!text) {
-    return fallback("Analisis AI dilewati", "Respons OpenRouter kosong.");
-  }
-  var parsed = parseAiJson(text);
-  if (!parsed) {
-    Logger.log("JSON tidak ter-parse: " + String(text).substring(0, 300));
-    logToSheet("ERROR", "JSON tidak ter-parse: " + String(text).substring(0, 300));
-    return fallback("Analisis AI dilewati", "Respons AI bukan JSON valid: " + String(text).substring(0, 120));
-  }
+
+  logToSheet("INFO", "AI via " + usedProvider + " OK.");
+  var parsed = attempt.parsed;
   var flag = String(parsed.flag || assessment.status || "SEHAT").toUpperCase();
+  // Urutan penting: cek TIDAK dulu, lalu KURANG/PERLU, terakhir SEHAT murni —
+  // "KURANG SEHAT" mengandung kata "SEHAT" sehingga cek SEHAT duluan = bug.
   var normalizedFlag = "PERLU PERBAIKAN";
   if (flag.indexOf("TIDAK") !== -1) normalizedFlag = "TIDAK SEHAT";
-  else if (flag.indexOf("SEHAT") !== -1) normalizedFlag = "SEHAT";
+  else if (flag.indexOf("KURANG") !== -1 || flag.indexOf("PERLU") !== -1) normalizedFlag = "KURANG SEHAT";
+  else if (flag === "SEHAT") normalizedFlag = "SEHAT";
   var perPhoto = [];
   if (Array.isArray(parsed.per_photo)) {
     perPhoto = parsed.per_photo.map(function (p) { return String(p); });
@@ -547,10 +620,11 @@ function analyzeAssessmentWithGemini(photos, assessment) {
   };
 }
 
-/** Kirim ke OpenRouter. Return parsed JSON body, atau null bila gagal/jaringan. */
-function postToOpenRouter(apiKey, requestBody) {
+/** Kirim chat-completion ke provider AI mana pun (Groq / OpenRouter, format OpenAI).
+ *  Return parsed JSON body, atau null bila gagal/jaringan/400 (pemanggil yang retry). */
+function postToAi(url, apiKey, requestBody, label) {
   try {
-    var response = UrlFetchApp.fetch("https://openrouter.ai/api/v1/chat/completions", {
+    var response = UrlFetchApp.fetch(url, {
       method: "post",
       headers: { Authorization: "Bearer " + apiKey },
       contentType: "application/json",
@@ -560,9 +634,14 @@ function postToOpenRouter(apiKey, requestBody) {
     });
     return JSON.parse(response.getContentText());
   } catch (error) {
-    logToSheet("ERROR", "postToOpenRouter gagal: " + error.toString());
+    logToSheet("ERROR", "postToAi " + (label || "") + " gagal: " + error.toString());
     return null;
   }
+}
+
+/** Nama lama (kompatibel bila ada trigger/test lama yang memanggilnya). */
+function postToOpenRouter(apiKey, requestBody) {
+  return postToAi("https://openrouter.ai/api/v1/chat/completions", apiKey, requestBody, "OpenRouter");
 }
 
 // ---------------------------------------------------------------------------
@@ -674,18 +753,22 @@ function onAdminEdit(e) {
   }
 }
 
-/** Parse JSON dari teks model yang sering dibungkus teks/fence ```json```. */
+/** Parse JSON dari teks model yang sering dibungkus teks/fence ```json```.
+ * v3.2: coba SEMUA kandidat {...} dari yang TERPANJANG (JSON asli), bukan yang
+ * pertama (sering hanya potongan chain-of-thought reasoning yang tak valid). */
 function parseAiJson(text) {
   var source = String(text || "");
   source = source.replace(/```(?:json)?/gi, "").trim();
-  var start = source.indexOf("{");
-  var end = source.lastIndexOf("}");
-  if (start !== -1 && end > start) {
-    source = source.substring(start, end + 1);
+  var candidates = source.match(/\{[\s\S]*?\}(?=\s*(\{|$))/g)
+    || source.match(/\{[\s\S]*\}/g) || [];
+  candidates.sort(function (x, y) { return y.length - x.length; });
+  for (var i = 0; i < candidates.length; i++) {
+    try {
+      var obj = JSON.parse(candidates[i]);
+      if (obj && (obj.flag !== undefined || obj.recommendation !== undefined || obj.is_valid !== undefined)) return obj;
+    } catch (ignore) { /* kandidat berikut */ }
   }
-  try {
-    return JSON.parse(source);
-  } catch (e) { return null; }
+  try { return JSON.parse(source); } catch (e) { return null; }
 }
 
 // ---------------------------------------------------------------------------
@@ -893,7 +976,7 @@ function setupEnvironment() {
       sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).clearContent();
     }
     var headers = [
-      "Audit ID", "Tanggal Sync", "Assessor", "Perusahaan / Kebun",
+      "Audit ID", "Tanggal Sync", "Assessor", "Perusahaan / Kebun", "Nama Pemilik / Alamat Rumah",
 
       // Komponen Rumah (1-8)
       "1. Langit-langit", "2. Dinding", "3. Lantai", "4. Jendela Kamar",
@@ -940,8 +1023,20 @@ function setupEnvironment() {
 
 /** Append kolom yang hilang (foto & AI) ke header tanpa menghapus data lama. */
 function ensureAiColumns(sheet) {
+  if (!sheet) return;
   var lastCol = sheet.getLastColumn();
+  if (!lastCol) lastCol = sheet.getMaxColumns();
   var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(String);
+
+  // v1.8: kolom Nama Pemilik / Alamat Rumah (sisip setelah Perusahaan)
+  var houseHeader = "Nama Pemilik / Alamat Rumah";
+  if (headers.indexOf(houseHeader) === -1) {
+    // Sisip di kolom 5 (setelah Perusahaan / Kebun = col 4)
+    sheet.insertColumnAfter(4);
+    sheet.getRange(1, 5).setValue(houseHeader).setFontWeight("bold").setBackground("#1F4E79").setFontColor("#FFFFFF").setHorizontalAlignment("center");
+    headers.splice(4, 0, houseHeader);
+    lastCol++;
+  }
 
   var required = [
     "URL Foto Komponen Rumah",

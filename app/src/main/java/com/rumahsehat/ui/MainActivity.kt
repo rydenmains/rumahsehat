@@ -190,6 +190,7 @@ private fun Assessment.toSavedAssessmentUi(): SavedAssessmentUi {
         id = id,
         companyName = company,
         assessorName = assessorId,
+        houseName = houseName,
         date = date,
         syncStatus = if (syncStatus == "SYNCED") SyncStatusUi.TERKIRIM else SyncStatusUi.MENUNGGU_KIRIM,
         healthStatus = label

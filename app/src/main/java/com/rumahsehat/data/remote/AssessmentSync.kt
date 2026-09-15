@@ -143,6 +143,7 @@ object AssessmentSync {
         put("meta", JSONObject().apply {
             put("assessor_name", assessment.assessorId)
             put("company", assessment.company)
+            put("house_name", assessment.houseName)
         })
 
         put("answers", JSONObject().apply {

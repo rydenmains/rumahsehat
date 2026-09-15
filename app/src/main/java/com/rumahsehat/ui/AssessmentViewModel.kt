@@ -36,6 +36,7 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
     // Identitas dari halaman-0 (dipakai subtitle AppBar + saat simpan).
     var assessorName: String = ""
     var companyName: String = ""
+    var houseName: String = ""
 
     init {
         val dao = AppDatabase.getDatabase(application).assessmentDao()
@@ -86,7 +87,7 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    fun saveAssessment(assessorName: String, company: String) {
+    fun saveAssessment(assessorName: String, company: String, houseName: String = "") {
         viewModelScope.launch {
             val scoreItems = _formItems.map {
                 ScoreItem(
@@ -107,6 +108,7 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
                 id = assessmentId,
                 company = company,
                 assessorId = assessorName,
+                houseName = houseName,
                 createdAt = System.currentTimeMillis(),
                 totalAchieved = calcResult.totalAchieved,
                 totalApplicable = calcResult.totalApplicable,
@@ -133,7 +135,8 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
         assessorName: String,
         company: String,
         selections: Map<String, Int>,
-        notes: Map<String, String>
+        notes: Map<String, String>,
+        houseName: String = ""
     ) {
         viewModelScope.launch {
             val formItems = FormItemsProvider.getFormItems()
@@ -157,6 +160,7 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
                 id = assessmentId,
                 company = company,
                 assessorId = assessorName,
+                houseName = houseName,
                 createdAt = System.currentTimeMillis(),
                 totalAchieved = calcResult.totalAchieved,
                 totalApplicable = calcResult.totalApplicable,
@@ -180,12 +184,14 @@ class AssessmentViewModel(application: Application) : AndroidViewModel(applicati
         assessorName: String,
         company: String,
         selections: Map<String, Int>,
-        photos: Map<String, String?>
+        photos: Map<String, String?>,
+        houseName: String = ""
     ): List<String> {
         val issues = mutableListOf<String>()
         val parts = mutableListOf<String>()
         if (assessorName.isBlank()) parts.add("Nama Petugas")
         if (company.isBlank()) parts.add("Asal Kader / Instansi")
+        if (houseName.isBlank()) parts.add("Nama Pemilik / Alamat Rumah")
         if (parts.isNotEmpty()) issues.add("Identitas Petugas belum lengkap: " + parts.joinToString(", "))
 
         val missingItems = AllFormQuestionIds.filter { selections[it] == null }

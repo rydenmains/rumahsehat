@@ -9,6 +9,8 @@ data class Assessment(
     val id: String, // ASM-YYYYMMDD-XXX
     val company: String,
     val assessorId: String,
+    /** Nama pemilik / alamat rumah yang diperiksa (halaman-0 identitas). */
+    val houseName: String = "",
     val createdAt: Long,
     val totalAchieved: Int = 0,
     val totalApplicable: Int = 0,

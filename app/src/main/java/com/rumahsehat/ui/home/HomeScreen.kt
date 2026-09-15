@@ -37,6 +37,7 @@ data class SavedAssessmentUi(
     val id: String,
     val companyName: String,
     val assessorName: String,
+    val houseName: String = "",
     val date: String,
     val syncStatus: SyncStatusUi,
     val healthStatus: String = "TIDAK SEHAT"
@@ -250,9 +251,16 @@ fun AssessmentCard(item: SavedAssessmentUi, onClick: () -> Unit) {
         onClick = onClick
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text(item.companyName, style = MaterialTheme.typography.titleMedium, color = OnSurface)
+            Text(
+                item.houseName.ifBlank { item.companyName },
+                style = MaterialTheme.typography.titleMedium, color = OnSurface
+            )
             Spacer(Modifier.height(2.dp))
             Text("${item.assessorName} · ${item.date}", style = MaterialTheme.typography.bodyMedium, color = OnSurfaceVariant)
+            if (item.houseName.isNotBlank()) {
+                Spacer(Modifier.height(2.dp))
+                Text(item.companyName, style = MaterialTheme.typography.bodySmall, color = OnSurfaceVariant)
+            }
             Spacer(Modifier.height(8.dp))
             Row(
                 horizontalArrangement = Arrangement.End,

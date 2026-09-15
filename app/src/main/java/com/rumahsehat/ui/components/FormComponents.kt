@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -149,6 +150,7 @@ fun PhotoUploadCard(
     subtitle: String,
     photoUri: String?,
     onCaptureClick: () -> Unit,
+    onGalleryClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -212,6 +214,29 @@ fun PhotoUploadCard(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         if (photoUri != null) "Ganti Foto" else "Ambil Foto",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = OnSurfaceVariant
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(
+                        BorderStroke(1.dp, Outline),
+                        RoundedCornerShape(8.dp)
+                    )
+                    .clickable(onClick = onGalleryClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.PhotoLibrary, contentDescription = null, tint = OnSurfaceVariant, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Pilih dari Galeri",
                         style = MaterialTheme.typography.labelLarge,
                         color = OnSurfaceVariant
                     )
@@ -308,8 +333,10 @@ fun QuestionCard(
 fun IdentityStepCard(
     name: String,
     instansi: String,
+    houseName: String,
     onNameChange: (String) -> Unit,
     onInstansiChange: (String) -> Unit,
+    onHouseChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -341,6 +368,16 @@ fun IdentityStepCard(
                 onValueChange = onInstansiChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Asal Kader / Instansi") },
+                singleLine = true,
+                shape = RoundedCornerShape(8.dp)
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = houseName,
+                onValueChange = onHouseChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Nama Pemilik / Alamat Rumah") },
+                placeholder = { Text("cth: Bp. Slamet — Jl. Mawar 12") },
                 singleLine = true,
                 shape = RoundedCornerShape(8.dp)
             )
